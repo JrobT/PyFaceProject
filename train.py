@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
-"""Python script to train the classifier.
+"""Python script to train the classifiers and test them on different sets.
 
-Currently I'm testing my concept using the fisher faces classifier.
+I have defined 4 sets:
+    -   Full Emotion List (8)
+    -   Emotion list without Fear & Surprise, as they have the least images (6)
+    -   The Emotion list without Neutral (7)
+    -   The Emotion list without Fear, Surprise, and Neutral (5)
+
+I have 3 classifiers:
+    -   Fisher Faces
+    -   Eigenfaces
+    -   Local Binary Pattern Histograms
 """
-import cv2
+import cv2  # OpenCV
 import glob
 import random
 import os
@@ -11,7 +20,12 @@ import time
 import multiprocessing
 import numpy as np
 
+
+# Start the script.
 sname = os.path.basename(__file__)  # The name of this script
+print("\n\n%s: Program starts..." % sname)
+start = time.clock()
+
 el = ["neutral", "anger", "contempt", "disgust",
       "fear", "happy", "sadness", "surprise"]  # The emotion list
 el2 = ["neutral", "anger", "contempt", "disgust",
@@ -20,9 +34,6 @@ el3 = ["anger", "contempt", "disgust",
        "fear", "happy", "sadness", "surprise"]  # The list without Neutral
 el4 = ["anger", "contempt", "disgust",
        "happy", "sadness"]  # The list without Fear, Surprise and Neutral
-
-print("%s: Program starts..." % sname)
-start = time.clock()
 
 fisherface = cv2.face.FisherFaceRecognizer_create()  # Fisherface classifier
 eigenface = cv2.face.EigenFaceRecognizer_create()  # Eigenface classifier
@@ -33,7 +44,7 @@ data = {}
 
 def get_images(emotion):
     """Split dataset into 80 percent training set and 20 percent prediction."""
-    files = glob.glob("dataset//%s//*" % emotion)
+    files = glob.glob("sort_database//database//%s//*" % emotion)
     random.shuffle(files)
     training = files[:int(len(files) * 0.8)]
     prediction = files[-int(len(files) * 0.2):]
@@ -158,7 +169,7 @@ metascore12 = []
 
 def threadme1():
     """Produce the results."""
-    for i in range(0, 10):
+    for i in range(0, 5):
         f = run_fisher_recognizer(training_data, training_labels,
                                   prediction_data, prediction_labels)
         print("%s: F got %s percent correct!" % (sname,
@@ -168,7 +179,7 @@ def threadme1():
 
 def threadme2():
     """Produce the results."""
-    for i in range(0, 10):
+    for i in range(0, 5):
         f2 = run_fisher_recognizer(training_data2, training_lbls2,
                                    prediction_data2, prediction_lbls2)
         print("%s: F2 got %s percent correct!" % (sname,
@@ -178,7 +189,7 @@ def threadme2():
 
 def threadme3():
     """Produce the results."""
-    for i in range(0, 10):
+    for i in range(0, 5):
         f3 = run_fisher_recognizer(training_data3, training_lbls3,
                                    prediction_data3, prediction_lbls3)
         print("%s: F3 got %s percent correct!" % (sname,
@@ -188,7 +199,7 @@ def threadme3():
 
 def threadme4():
     """Produce the results."""
-    for i in range(0, 10):
+    for i in range(0, 5):
         f4 = run_fisher_recognizer(training_data4, training_lbls4,
                                    prediction_data4, prediction_lbls4)
         print("%s: F4 got %s percent correct!" % (sname,
@@ -198,7 +209,7 @@ def threadme4():
 
 def threadme5():
     """Produce the results."""
-    for i in range(0, 10):
+    for i in range(0, 5):
         e = run_eigen_recognizer(training_data, training_labels,
                                  prediction_data, prediction_labels)
         print("%s: E got %s percent correct!" % (sname,
@@ -208,7 +219,7 @@ def threadme5():
 
 def threadme6():
     """Produce the results."""
-    for i in range(0, 10):
+    for i in range(0, 5):
         e2 = run_eigen_recognizer(training_data2, training_lbls2,
                                   prediction_data2, prediction_lbls2)
         print("%s: E2 got %s percent correct!" % (sname,
@@ -218,7 +229,7 @@ def threadme6():
 
 def threadme7():
     """Produce the results."""
-    for i in range(0, 10):
+    for i in range(0, 5):
         e3 = run_eigen_recognizer(training_data3, training_lbls3,
                                   prediction_data3, prediction_lbls3)
         print("%s: E3 got %s percent correct!" % (sname,
@@ -228,7 +239,7 @@ def threadme7():
 
 def threadme8():
     """Produce the results."""
-    for i in range(0, 10):
+    for i in range(0, 5):
         e4 = run_eigen_recognizer(training_data4, training_lbls4,
                                   prediction_data4, prediction_lbls4)
         print("%s: E4 got %s percent correct!" % (sname,
@@ -238,7 +249,7 @@ def threadme8():
 
 def threadme9():
     """Produce the results."""
-    for i in range(0, 10):
+    for i in range(0, 5):
         l = run_lbph_recognizer(training_data, training_labels,
                                 prediction_data, prediction_labels)
         print("%s: L got %s percent correct!" % (sname,
@@ -248,7 +259,7 @@ def threadme9():
 
 def threadme10():
     """Produce the results."""
-    for i in range(0, 10):
+    for i in range(0, 5):
         l2 = run_lbph_recognizer(training_data2, training_lbls2,
                                  prediction_data2, prediction_lbls2)
         print("%s: L2 got %s percent correct!" % (sname,
@@ -258,7 +269,7 @@ def threadme10():
 
 def threadme11():
     """Produce the results."""
-    for i in range(0, 10):
+    for i in range(0, 5):
         l3 = run_lbph_recognizer(training_data3, training_lbls3,
                                  prediction_data3, prediction_lbls3)
         print("%s: L3 got %s percent correct!" % (sname,
@@ -268,7 +279,7 @@ def threadme11():
 
 def threadme12():
     """Produce the results."""
-    for i in range(0, 10):
+    for i in range(0, 5):
         l4 = run_lbph_recognizer(training_data4, training_lbls4,
                                  prediction_data4, prediction_lbls4)
         print("%s: L4 got %s percent correct!" % (sname,
@@ -319,5 +330,6 @@ print("%s: Final score l3: Got %s percent correct!"
 print("%s: Final score l4: Got %s percent correct!"
       % (sname, np.mean(metascore12)))
 
+# End the script.
 end = time.clock()
-print("\n%s: Program end. Time elapsed: %s" % (sname, end - start))
+print("%s: Program end. Time elapsed: %s." % (sname, end - start))
