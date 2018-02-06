@@ -5,7 +5,6 @@
 import PIL.Image
 import PIL.ImageFile
 import glob
-import os
 from shutil import copyfile
 
 
@@ -66,6 +65,10 @@ for image in files:
                                                                img_direction)
     elif img_emotion == "disgusted":
         dest_emot = "combined_dataset//{}//{}{}_{}.png".format("disgust",
+                                                               dataset, cnt,
+                                                               img_direction)
+    elif img_emotion == "sad":
+        dest_emot = "combined_dataset//{}//{}{}_{}.png".format("sad",
                                                                dataset, cnt,
                                                                img_direction)
     else:

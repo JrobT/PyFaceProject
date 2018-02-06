@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 
-"""."""
+"""Implementation of a Support Vector Machine.
+
+This class allows use of a trained SVM classifier with a polynomial kernel. I
+use it to demonstrate the applications of such a system by producing an
+image-based facial expression recognition system that will link to a music
+player.
+"""
 
 import numpy as np  # SVC methods will accept numpy arrays
 import cv2

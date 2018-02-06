@@ -49,7 +49,7 @@ with open('JAFFE_dataset//JAFFE.csv') as csvfile:
         maxx = max(lst)
         index = lst.index(maxx)  # Get the emotion most picked
 
-        if (index >= 3):  # less than 3 means the emotion is 'undecided' IMHO
+        if (maxx >= 3):  # less than 3 means the emotion is 'undecided' IMHO
 
             imgName = row['PIC']
             fpath = 'JAFFE_dataset//images//{0!s}'.format(imgName)

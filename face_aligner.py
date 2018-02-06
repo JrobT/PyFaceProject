@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """A class that will take a frame and align the image toward a face."""
 
 import numpy as np
@@ -17,11 +19,11 @@ FACIAL_LANDMARKS_IDXS = OrderedDict([
 
 
 class FaceAligner:
-    """."""
+    """A face aligner."""
 
     def __init__(self, predictor, desiredLeftEye=(0.35, 0.35),
                  desiredFaceWidth=380, desiredFaceHeight=None):
-        """."""
+        """Initialise the image we want."""
         self.predictor = predictor
         self.desiredLeftEye = desiredLeftEye
         self.desiredFaceWidth = desiredFaceWidth
@@ -30,7 +32,7 @@ class FaceAligner:
             self.desiredFaceHeight = self.desiredFaceWidth
 
     def align(self, gray, rect):
-        """."""
+        """Align image to face."""
         shape = self.predictor(gray, rect)
         coords = np.zeros((68, 2), dtype=int)
         for i in range(0, 68):

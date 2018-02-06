@@ -57,7 +57,7 @@ with open('MMI_dataset//batch.csv') as csvfile:  # Coded using Mechanical Turk
         temp = int(row['AvgRate'])
         avg += temp
         imgName = row['Input.image_url']
-        fpath = "MMI_dataset//images//%s" % imgName
+        fpath = "MMI_dataset//images//{}".format(imgName)
 
         my_file = Path(fpath)
         if my_file.is_file():
@@ -89,5 +89,5 @@ with open('MMI_dataset//batch.csv') as csvfile:  # Coded using Mechanical Turk
         else:
             print("{}: File was deleted.".format(dataset))
 
-print("***> Average Ranking of Amazon Mechanical Turk accurancy is {} percent."
-      .format(avg/cnt))
+print("\n***> Average Ranking of Amazon Mechanical Turk accurancy is {} percent."
+      .format(int(avg/cnt)))
