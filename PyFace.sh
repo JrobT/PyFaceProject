@@ -1,4 +1,4 @@
 #!/bin/bash
 
-python3 train.py
-python3 SVMs.py
+python3 face_training.py
+python3 svms.py
