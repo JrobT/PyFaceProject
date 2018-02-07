@@ -12,9 +12,11 @@ class MusicManager:
         self.scope = 'playlist-modify-public'
         self.client_id = 'cb4ab90932be46d0848653c27469f61c'
         self.client_secret = 'e9bd8cc2fca547d99cb05ca49472e2d2'
+        self.redirect_uri = "https://example.com/callback/"
         self.token = util.prompt_for_user_token(username, self.scope,
                                                 self.client_id,
-                                                self.client_secret)
+                                                self.client_secret,
+                                                self.redirect_uri)
 
         if self.token:
             self.sp = spotipy.Spotify(auth=self.token)
