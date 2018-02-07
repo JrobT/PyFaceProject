@@ -61,6 +61,7 @@ def detect_faces(emotion):
         detections = faceDet5(gray, 1)
 
         haar_detections = []
+        facefeatures = []
         if not len(detections) > 0:  # dlib's detector will work over 50% of the time
             haar_detections = faceDet.detectMultiScale(gray, scaleFactor=1.1,
                                                        minNeighbors=10, minSize=(5, 5),
@@ -92,7 +93,7 @@ def detect_faces(emotion):
                 y = face.top()
                 w = face.right() - face.left()
                 h = face.bottom() - face.top()
-                facefeatures.append(face_utils.rect_to_bb(x, y, w, h))
+                facefeatures.append([x, y, w, h])
 
         for (x, y, w, h) in facefeatures:
             print("Found a face!!")
