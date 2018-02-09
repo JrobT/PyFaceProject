@@ -37,11 +37,11 @@ def get_images(emotion):
     """Split dataset into 80 percent training set and 20 percent prediction."""
     files = glob.glob("sort_database//database//{}//*".format(emotion))
     random.shuffle(files)
-    # training = files[:int(len(files) * training_set_size)]
-    # prediction = files[-int(len(files) * testing_set_size):]
+    training = files[:int(len(files) * training_set_size)]
+    prediction = files[-int(len(files) * testing_set_size):]
     # for testing
-    training = files[:5]
-    prediction = files[-5:]
+    # training = files[:5]
+    # prediction = files[-5:]
     return training, prediction
 
 
@@ -234,6 +234,45 @@ def get_sets_as_images(emotions):
 
             if len(check) > 0:
                 prediction_data.append(clahe_image)
+                prediction_labels.append(emotions.index(emotion))
+
+    return training_data, training_labels, prediction_data, prediction_labels
+
+
+def get_sets(emotions):
+    """Make the feature vector sets to test on."""
+    training_data = []
+    training_labels = []
+    prediction_data = []
+    prediction_labels = []
+
+    for emotion in emotions:
+        print("Obtaining images that represent ``{}''.".format(emotion))
+        training, prediction = get_images(emotion)
+
+        print("***> Allocating {}. This directory contains {} images."
+              .format(emotion, len(training)+len(prediction)))
+        # Append data to training and prediction lists and label 0 to num.
+        for item in training:
+            image = cv2.imread(item)  # Open image
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+            clahe_image = clahe.apply(gray)
+            facefeatures = get_face_landmarks(clahe_image)
+
+            if (facefeatures != "error"):
+                training_data.append(facefeatures)
+                training_labels.append(emotions.index(emotion))
+
+        for item in prediction:
+            image = cv2.imread(item)  # Open image
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+            clahe_image = clahe.apply(gray)
+            facefeatures = get_face_landmarks(clahe_image)
+
+            if (facefeatures != "error"):
+                prediction_data.append(facefeatures)
                 prediction_labels.append(emotions.index(emotion))
 
     return training_data, training_labels, prediction_data, prediction_labels

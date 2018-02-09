@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-"""A demonstration of a Convolutional Neural Network."""
+"""A demonstration of a Convolutional Neural Network.
+
+TODO : ADD DESCRIPTION
+"""
 
 # Import packages.
 import os
@@ -15,13 +18,13 @@ from constants import EMOTIONS_5
 # Required methods.
 from keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
 
 # Imports for Keras.
 import keras
-from keras.models import Sequential, Input, Model
+from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten, Activation
 from keras.layers import Conv2D, MaxPooling2D
-from keras.layers.normalization import BatchNormalization
 
 
 def demo_images(X_train, y_train, X_test, y_test):
@@ -33,7 +36,7 @@ def demo_images(X_train, y_train, X_test, y_test):
     plt.imshow(X_train[0, :, :], cmap='gray')
     plt.title("Ground Truth : {}".format(y_train[0]))
 
-    # Display the first image in testing data
+    # Display the first image in testing data.
     plt.subplot(122)
     plt.imshow(X_test[0, :, :], cmap='gray')
     plt.title("Ground Truth : {}".format(y_test[0]))
@@ -41,8 +44,8 @@ def demo_images(X_train, y_train, X_test, y_test):
     plt.show()
 
 
-def plot_chart():
-    """."""
+def plot_chart(cnn_train):
+    """Plot accuracy and loss points between training and testing data."""
     accuracy = cnn_train.history['acc']
     val_accuracy = cnn_train.history['val_acc']
     loss = cnn_train.history['loss']
@@ -130,7 +133,7 @@ cnn_model.add(Dense(num_classes, activation='softmax'))
 
 cnn_model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer=keras.optimizers.Adam(), metrics=['accuracy'])
-# cnn_model.summary()
+cnn_model.summary()
 
 cnn_train = cnn_model.fit(X_train, train_lbl, batch_size=batch_size,
                           epochs=epochs, verbose=1,
@@ -139,3 +142,50 @@ cnn_train = cnn_model.fit(X_train, train_lbl, batch_size=batch_size,
 test_eval = cnn_model.evaluate(X_test, y_test_one_hot, verbose=0)
 print('Test loss : ', test_eval[0])
 print('Test accuracy : ', test_eval[1])
+
+plot_chart(cnn_train)
+
+cnn_model = Sequential()
+cnn_model.add(Conv2D(32, kernel_size=(3, 3), activation='linear',
+                     input_shape=(380, 380, 1), padding='same'))
+cnn_model.add(Activation('tanh'))
+cnn_model.add(MaxPooling2D((2, 2), padding='same'))
+cnn_model.add(Dropout(0.25))
+cnn_model.add(Conv2D(64, (3, 3), activation='linear', padding='same'))
+cnn_model.add(Activation('tanh'))
+cnn_model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+cnn_model.add(Dropout(0.25))
+cnn_model.add(Conv2D(128, (3, 3), activation='linear', padding='same'))
+cnn_model.add(Activation('tanh'))
+cnn_model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+cnn_model.add(Dropout(0.4))
+cnn_model.add(Flatten())
+cnn_model.add(Dense(128, activation='linear'))
+cnn_model.add(Activation('tanh'))
+cnn_model.add(Dropout(0.3))
+cnn_model.add(Dense(num_classes, activation='softmax'))
+
+cnn_model.compile(loss=keras.losses.categorical_crossentropy,
+                  optimizer=keras.optimizers.Adam(), metrics=['accuracy'])
+cnn_model.summary()
+
+cnn_train = cnn_model.fit(X_train, train_lbl, batch_size=batch_size,
+                          epochs=epochs, verbose=1,
+                          validation_data=(X_valid, valid_lbl))
+
+test_eval = cnn_model.evaluate(X_test, y_test_one_hot, verbose=1)
+print('Test loss : ', test_eval[0])
+print('Test accuracy : ', test_eval[1])
+
+plot_chart(cnn_train)
+
+cnn_model.save("cnn_model_dropout.h5py")
+
+predicted_classes = cnn_model.predict(X_test)
+predicted_classes = np.argmax(np.round(predicted_classes), axis=1)
+correct = np.where(predicted_classes == y_test)[0]
+print("Found {} correct labels".format(len(correct)))
+incorrect = np.where(predicted_classes != y_test)[0]
+print("Found {} incorrect labels".format(len(incorrect)))
+target_names = ["Class {}".format(i) for i in range(num_classes)]
+print(classification_report(y_test, predicted_classes, target_names=target_names))
