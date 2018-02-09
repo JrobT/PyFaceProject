@@ -1,22 +1,33 @@
+#!/usr/bin/env python3
+
 """."""
+
+# Import packages.
 import cv2
 import sys
-from constants import *
-from emotion_recognition import EmotionRecognition
-from os.path import join
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Load Model
-model = EmotionRecognition()
-model.build_network()
+# My imports.
+from constants import EMOTIONS_5, EMOTIONS_8
+from emotion_recognition import SVM
+
+from os.path import join
+
+# Build and train the classifier we're using.
+SVM = SVM()
+if (os.path.isfile('svm.pkl')):
+    SVM.load()
+else:
+    SVM.train()
+    SVM.save()
 
 images = np.load(join(SAVE_DIRECTORY, SAVE_DATASET_IMAGES_FILENAME))
 labels = np.load(join(SAVE_DIRECTORY, SAVE_DATASET_LABELS_FILENAME))
 images = images.reshape([-1, SIZE_FACE, SIZE_FACE, 1])
-labels = labels.reshape([-1, len(EMOTIONS)])
+labels = labels.reshape([-1, len(EMOTIONS_5)])
 
-data = np.zeros((len(EMOTIONS),len(EMOTIONS)))
+data = np.zeros((len(EMOTIONS_5), len(EMOTIONS_5)))
 for i in xrange(images.shape[0]):
 	result = network.predict(images[i])
 	data[np.argmax(labels[i]), result[0].index(max(result[0]))] += 1

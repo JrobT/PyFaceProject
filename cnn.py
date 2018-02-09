@@ -18,7 +18,6 @@ from constants import EMOTIONS_5
 # Required methods.
 from keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
 
 # Imports for Keras.
 import keras
@@ -133,7 +132,8 @@ cnn_model.add(Dense(num_classes, activation='softmax'))
 
 cnn_model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer=keras.optimizers.Adam(), metrics=['accuracy'])
-cnn_model.summary()
+with open('roc_curves_reports/cnn', "w") as text_file:
+    print(cnn_model.summary())
 
 cnn_train = cnn_model.fit(X_train, train_lbl, batch_size=batch_size,
                           epochs=epochs, verbose=1,
@@ -143,6 +143,8 @@ test_eval = cnn_model.evaluate(X_test, y_test_one_hot, verbose=0)
 print('Test loss : ', test_eval[0])
 print('Test accuracy : ', test_eval[1])
 
+name = "CNN (5)"
+model.produce_report(cnn_model, X_test, y_test, num_classes, name)
 plot_chart(cnn_train)
 
 cnn_model = Sequential()
@@ -167,7 +169,8 @@ cnn_model.add(Dense(num_classes, activation='softmax'))
 
 cnn_model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer=keras.optimizers.Adam(), metrics=['accuracy'])
-cnn_model.summary()
+with open('roc_curves_reports/cnn_dropout', "w") as text_file:
+    print(cnn_model.summary())
 
 cnn_train = cnn_model.fit(X_train, train_lbl, batch_size=batch_size,
                           epochs=epochs, verbose=1,
@@ -177,15 +180,13 @@ test_eval = cnn_model.evaluate(X_test, y_test_one_hot, verbose=1)
 print('Test loss : ', test_eval[0])
 print('Test accuracy : ', test_eval[1])
 
+name = "CNN (5_dropout)"
+model.produce_report(cnn_model, X_test, y_test, num_classes, name)
 plot_chart(cnn_train)
 
-cnn_model.save("cnn_model_dropout.h5py")
+# cnn_model.save("cnn_model_dropout.h5py")
 
-predicted_classes = cnn_model.predict(X_test)
-predicted_classes = np.argmax(np.round(predicted_classes), axis=1)
-correct = np.where(predicted_classes == y_test)[0]
-print("Found {} correct labels".format(len(correct)))
-incorrect = np.where(predicted_classes != y_test)[0]
-print("Found {} incorrect labels".format(len(incorrect)))
-target_names = ["Class {}".format(i) for i in range(num_classes)]
-print(classification_report(y_test, predicted_classes, target_names=target_names))
+# End the script.
+end = time.clock()
+print("""\n{}: Program end. Time elapsed:
+      {:.5f}.""".format(script_name, end - start))
