@@ -31,8 +31,8 @@ After allocation of the dataset (will take a while, due to sample size), I test
 each method and label its output.
 """
 
+# Import packages.
 import numpy as np  # SVC methods will accept numpy arrays
-import matplotlib.pyplot as plt  # Plot ROC curve
 import os
 import time
 
@@ -45,10 +45,10 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, label_binarize
 from sklearn.svm import LinearSVC, SVC
 from sklearn.multiclass import OneVsRestClassifier
-from sklearn.metrics import roc_curve, auc
 
 # My imports.
-import extraction_model as model
+import extraction_model as exmodel
+import evaluation_model as evmodel
 from constants import EMOTIONS_8, EMOTIONS_5
 
 
@@ -78,41 +78,6 @@ start = time.clock()  # Start of the speed test. clock() is most accurate
 #     X_test_pca = pca.transform(X_test)
 #
 #     return X_train_pca, X_test_pca, y_train, y_test
-
-
-def build_roc_curve(n_classes, y_score, y_test, title):
-    """Build a ROC curve for a multiclass problem."""
-    # Compute ROC curve and ROC area for each class.
-    fpr = dict()
-    tpr = dict()
-    roc_auc = dict()
-    for i in range(0, n_classes):
-        fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
-        roc_auc[i] = auc(fpr[i], tpr[i])
-
-    # Compute micro-average ROC curve and ROC area.
-    fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), y_score.ravel())
-    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
-
-    # Plot ROC curve.
-    fig = plt.figure()
-    plt.plot(fpr["micro"], tpr["micro"],
-             label='micro-average ROC curve (area = {0:0.2f})'
-             ''.format(roc_auc["micro"]))
-    for i in range(n_classes):
-        plt.plot(fpr[i], tpr[i],
-                 label='ROC curve of class {0} (area = {1:0.2f})'
-                       ''.format(i+1, roc_auc[i]))
-
-    plt.plot([0, 1], [0, 1], 'k--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Multiclass Receiver Operating Characteristic Curve for {}'
-              ''.format(title))
-    plt.legend(loc="lower right")
-    fig.savefig('roc_curves_reports/{}'.format(title))
 
 
 """ Test the classifiers! """
@@ -148,7 +113,7 @@ fit_time = 0
 score_time = 0
 
 # Build classifiers.
-svm_clf = Pipeline([
+lin_svm_clf = Pipeline([
     ("scaler", StandardScaler()),
     ("linear_svc", LinearSVC(C=1, loss="hinge"))
 ])
@@ -163,44 +128,43 @@ poly_svm_clf = Pipeline((
 
 for i in range(0, 5):  # 5 testing runs
     print("\nROUND {}\n".format(i+1))
-    tdata, tlabels, pdata, plabels = model.get_sets(EMOTIONS_8)
-    tdata1, tlabels1, pdata1, plabels1 = model.get_sets(EMOTIONS_5)
+    X_train, y_train, X_test, y_test = exmodel.get_sets(EMOTIONS_8)
+    X_train1, y_train1, X_test1, y_test1 = exmodel.get_sets(EMOTIONS_5)
 
     # Change to numpy arrays as classifier expects them in this format.
-    nptdata = np.array(tdata)
-    nppdata = np.array(pdata)
-    nptdata1 = np.array(tdata1)
-    nppdata1 = np.array(pdata1)
+    X_train = np.array(X_train)
+    X_test = np.array(X_test)
+    X_train1 = np.array(X_train1)
+    X_test1 = np.array(X_test1)
 
     # Binarize the output.
-    y = label_binarize(plabels, classes=[1, 2, 3, 4, 5, 6, 7, 8])
-    y1 = label_binarize(plabels1, classes=[1, 2, 3, 4, 5])
+    y = label_binarize(y_test, classes=[1, 2, 3, 4, 5, 6, 7, 8])
+    y1 = label_binarize(y_test1, classes=[1, 2, 3, 4, 5])
     n_classes = y.shape[1]
     n_classes1 = y1.shape[1]
 
     """ LINEAR KERNEL // LIST 1 // LANDMARKS """
     # Probability of one class vs. the rest.
-    lin_svm_clf = OneVsRestClassifier(svm_clf)
+    svm_clf = OneVsRestClassifier(lin_svm_clf)
 
     # Train the support vector machine.
     print("***> Training SVM with LINEAR kernel & list 1.")
     fit_time_start = time.clock()
-    y_score = lin_svm_clf.fit(nptdata, tlabels).decision_function(nppdata)
+    y_pred = svm_clf.fit(X_train, y_train).predict(X_test)
     fit_time_stop = time.clock()
     fit_time = fit_time_stop-fit_time_start
 
     # Get the score for the classifier (percent it got correct).
     print("Scoring the classifier on the prediction list 1.")
     score_time_start = time.clock()
-    linear_score = lin_svm_clf.score(nppdata, plabels)
+    linear_score = svm_clf.score(X_test, y_test)
     score_time_stop = time.clock()
     score_time = score_time_stop-score_time_start
 
-    name = "Linear Kernel (8_{})".format(i+1)
-    # Multiclass ROC curve generator.
-    build_roc_curve(n_classes, y_score, y, name)
-    # Classification Report.
-    model.produce_report(lin_svm_clf, nppdata, plabels, n_classes, name)
+    name = "linear8({})".format(i+1)
+    evmodel.report(y_test, y_pred, n_classes, name)
+    evmodel.matrix(y_test, y_pred, np.unique(y_train), False, name)
+    evmodel.matrix(y_test, y_pred, np.unique(y_train), True, name)
 
     # Append this rounds scores and times to the respective metascore array.
     linear_scores.append(linear_score)
@@ -208,23 +172,24 @@ for i in range(0, 5):  # 5 testing runs
     linear_score_times.append(score_time)
 
     """ LINEAR KERNEL // LIST 2 // LANDMARKS """
-    lin_svm_clf = OneVsRestClassifier(svm_clf)
+    svm_clf = OneVsRestClassifier(lin_svm_clf)
 
     print("***> Training SVM with LINEAR kernel & list 2.")
     fit_time_start = time.clock()
-    y_score = lin_svm_clf.fit(nptdata1, tlabels1).decision_function(nppdata1)
+    y_pred = svm_clf.fit(X_train1, y_train1).predict(X_test1)
     fit_time_stop = time.clock()
     fit_time = fit_time_stop-fit_time_start
 
     print("Scoring the classfier on the prediction set 2.")
     score_time_start = time.clock()
-    linear_score = lin_svm_clf.score(nppdata1, plabels1)
+    linear_score = svm_clf.score(X_test1, y_test1)
     score_time_stop = time.clock()
     score_time = score_time_stop-score_time_start
 
-    name = "Linear Kernel (5_{})".format(i+1)
-    build_roc_curve(n_classes1, y_score, y1, name)
-    model.produce_report(lin_svm_clf, nppdata1, plabels1, n_classes1, name)
+    name = "linear5({})".format(i+1)
+    evmodel.report(y_test1, y_pred, n_classes1, name)
+    evmodel.matrix(y_test1, y_pred, np.unique(y_train1), False, name)
+    evmodel.matrix(y_test1, y_pred, np.unique(y_train1), True, name)
 
     linear_scores1.append(linear_score)
     linear_fit_times1.append(fit_time)
@@ -235,19 +200,20 @@ for i in range(0, 5):  # 5 testing runs
 
     print("***> Training SVM with RBF kernel & list 1.")
     fit_time_start = time.clock()
-    y_score = rbf_clf.fit(nptdata, tlabels).decision_function(nppdata)
+    y_pred = rbf_clf.fit(X_train, y_train).predict(X_test)
     fit_time_stop = time.clock()
     fit_time = fit_time_stop-fit_time_start
 
     print("Scoring the classfier on the prediction set 1.")
     score_time_start = time.clock()
-    rbf_score = rbf_clf.score(nppdata, plabels)
+    rbf_score = rbf_clf.score(X_test, y_test)
     score_time_stop = time.clock()
     score_time = score_time_stop-score_time_start
 
-    name = "RBF Kernel (8_{})".format(i+1)
-    build_roc_curve(n_classes, y_score, y, name)
-    model.produce_report(rbf_clf, nppdata, plabels, n_classes, name)
+    name = "rbf8({})".format(i+1)
+    evmodel.report(y_test, y_pred, n_classes, name)
+    evmodel.matrix(y_test, y_pred, np.unique(y_train), False, name)
+    evmodel.matrix(y_test, y_pred, np.unique(y_train), True, name)
 
     rbf_scores.append(rbf_score)
     rbf_fit_times.append(fit_time)
@@ -258,19 +224,20 @@ for i in range(0, 5):  # 5 testing runs
 
     print("Training SVM with RBF kernel & list 2.")
     fit_time_start = time.clock()
-    y_score = rbf_clf.fit(nptdata1, tlabels1).decision_function(nppdata1)
+    y_pred = rbf_clf.fit(X_train1, y_train1).predict(X_test1)
     fit_time_stop = time.clock()
     fit_time = fit_time_stop-fit_time_start
 
     print("Scoring the classfier on the prediction set 2.")
     score_time_start = time.clock()
-    rbf_score = rbf_clf.score(nppdata1, plabels1)
+    rbf_score = rbf_clf.score(X_test1, y_test1)
     score_time_stop = time.clock()
     score_time = score_time_stop-score_time_start
 
-    name = "RBF Kernel (5_{})".format(i+1)
-    build_roc_curve(n_classes1, y_score, y1, name)
-    model.produce_report(rbf_clf, nppdata1, plabels1, n_classes1, name)
+    name = "rbf5({})".format(i+1)
+    evmodel.report(y_test1, y_pred, n_classes1, name)
+    evmodel.matrix(y_test1, y_pred, np.unique(y_train1), False, name)
+    evmodel.matrix(y_test1, y_pred, np.unique(y_train1), True, name)
 
     rbf_scores1.append(rbf_score)
     rbf_fit_times1.append(fit_time)
@@ -281,19 +248,20 @@ for i in range(0, 5):  # 5 testing runs
 
     print("Training SVM with POLYNOMIAL kernel & list 1.")
     fit_time_start = time.clock()
-    y_score = poly_clf.fit(nptdata, tlabels).decision_function(nppdata)
+    y_pred = poly_clf.fit(X_train, y_train).predict(X_test)
     fit_time_stop = time.clock()
     fit_time = fit_time_stop-fit_time_start
 
     print("Scoring the classfier on the prediction set 1.")
     score_time_start = time.clock()
-    poly_score = poly_clf.score(nppdata, plabels)
+    poly_score = poly_clf.score(X_test, y_test)
     score_time_stop = time.clock()
     score_time = score_time_stop-score_time_start
 
-    name = "Polynomial Kernel (8_{})".format(i+1)
-    build_roc_curve(n_classes, y_score, y, name)
-    model.produce_report(poly_clf, nppdata, plabels, n_classes, name)
+    name = "poly8({})".format(i+1)
+    evmodel.report(y_test, y_pred, n_classes, name)
+    evmodel.matrix(y_test, y_pred, np.unique(y_train), False, name)
+    evmodel.matrix(y_test, y_pred, np.unique(y_train), True, name)
 
     poly_scores.append(poly_score)
     poly_fit_times.append(fit_time)
@@ -304,19 +272,20 @@ for i in range(0, 5):  # 5 testing runs
 
     print("Training SVM with POLYNOMIAL kernel & list 2.")
     fit_time_start = time.clock()
-    y_score = poly_clf.fit(nptdata1, tlabels1).decision_function(nppdata1)
+    y_pred = poly_clf.fit(X_train1, y_train1).predict(X_test1)
     fit_time_stop = time.clock()
     fit_time = fit_time_stop-fit_time_start
 
     print("Scoring the classfier on the prediction set 2.")
     score_time_start = time.clock()
-    poly_score = poly_clf.score(nppdata1, plabels1)
+    poly_score = poly_clf.score(X_test1, y_test1)
     score_time_stop = time.clock()
     score_time = score_time_stop-score_time_start
 
-    name = "Polynomial Kernel (8_{})".format(i+1)
-    build_roc_curve(n_classes1, y_score, y1, name)
-    model.produce_report(poly_clf, nppdata1, plabels1, n_classes1, name)
+    name = "poly5({})".format(i+1)
+    evmodel.report(y_test1, y_pred, n_classes1, name)
+    evmodel.matrix(y_test1, y_pred, np.unique(y_train1), False, name)
+    evmodel.matrix(y_test1, y_pred, np.unique(y_train1), True, name)
 
     poly_scores1.append(poly_score)
     poly_fit_times1.append(fit_time)
@@ -324,58 +293,60 @@ for i in range(0, 5):  # 5 testing runs
 
     """ END OF THE ROUND """
 
-    print("\n{}: Test round {} - ".format(script_name, (i+1)))
-    print("\nSVM, LINEAR, Landmarks, List 1:")
-    print("> {:.2f} percent correct.".format(linear_scores[i]*100))
-    print("> Fit time {}".format(linear_fit_times[i]))
-    print("> Test time {}".format(linear_score_times[i]))
-    print("\nSVM, LINEAR, Landmarks, List 2:")
-    print("> {:.2f} percent correct.".format(linear_scores1[i]*100))
-    print("> Fit time {}".format(linear_fit_times1[i]))
-    print("> Test time {}".format(linear_score_times1[i]))
-    print("\nSVM, RBF, Landmarks, List 1:")
-    print("> {:.2f} percent correct.".format(rbf_scores[i]*100))
-    print("> Fit time {}".format(rbf_fit_times[i]))
-    print("> Test time {}".format(rbf_score_times[i]))
-    print("\nSVM, RBF, Landmarks, List 2:")
-    print("> {:.2f} percent correct.".format(rbf_scores1[i]*100))
-    print("> Fit time {}".format(rbf_fit_times1[i]))
-    print("> Test time {}".format(rbf_score_times1[i]))
-    print("\nSVM, POLYNOMIAL, Landmarks, List 1:")
-    print("> {:.2f} percent correct.".format(poly_scores[i]*100))
-    print("> Fit time {}".format(poly_fit_times[i]))
-    print("> Test time {}".format(poly_score_times[i]))
-    print("\nSVM, POLYNOMIAL, Landmarks, List 2:")
-    print("> {:.2f} percent correct.".format(poly_scores1[i]*100))
-    print("> Fit time {}".format(poly_fit_times1[i]))
-    print("> Test time {}".format(poly_score_times1[i]))
+    with open('results/output{}'.format(i+1), "w") as text_file:
+        print("\n{}: Test round {} - ".format(script_name, (i+1)))
+        print("\nSVM, LINEAR, Landmarks, List 1:")
+        print("> {:.2f} percent correct.".format(linear_scores[i]*100))
+        print("> Fit time {}".format(linear_fit_times[i]))
+        print("> Test time {}".format(linear_score_times[i]))
+        print("\nSVM, LINEAR, Landmarks, List 2:")
+        print("> {:.2f} percent correct.".format(linear_scores1[i]*100))
+        print("> Fit time {}".format(linear_fit_times1[i]))
+        print("> Test time {}".format(linear_score_times1[i]))
+        print("\nSVM, RBF, Landmarks, List 1:")
+        print("> {:.2f} percent correct.".format(rbf_scores[i]*100))
+        print("> Fit time {}".format(rbf_fit_times[i]))
+        print("> Test time {}".format(rbf_score_times[i]))
+        print("\nSVM, RBF, Landmarks, List 2:")
+        print("> {:.2f} percent correct.".format(rbf_scores1[i]*100))
+        print("> Fit time {}".format(rbf_fit_times1[i]))
+        print("> Test time {}".format(rbf_score_times1[i]))
+        print("\nSVM, POLYNOMIAL, Landmarks, List 1:")
+        print("> {:.2f} percent correct.".format(poly_scores[i]*100))
+        print("> Fit time {}".format(poly_fit_times[i]))
+        print("> Test time {}".format(poly_score_times[i]))
+        print("\nSVM, POLYNOMIAL, Landmarks, List 2:")
+        print("> {:.2f} percent correct.".format(poly_scores1[i]*100))
+        print("> Fit time {}".format(poly_fit_times1[i]))
+        print("> Test time {}".format(poly_score_times1[i]))
 
 """ END OF THE TEST """
 
-print("\nAverages for SVM with Linear kernel / set 1 - {:.2f}%, {}, {}."
-      .format((np.mean(linear_scores)*100),
-              (np.mean(linear_fit_times)),
-              (np.mean(linear_score_times))))
-print("Averages for SVM with Linear kernel / set 2 - {:.2f}%, {}, {}."
-      .format((np.mean(linear_scores1)*100),
-              (np.mean(linear_fit_times1)),
-              (np.mean(linear_score_times1))))
-print("\nAverages for SVM with RBF kernel / set 1 - {:.2f}%, {}, {}."
-      .format((np.mean(rbf_scores)*100),
-              (np.mean(rbf_fit_times)),
-              (np.mean(rbf_score_times))))
-print("Averages for SVM with RBF kernel / set 2 - {:.2f}%, {}, {}."
-      .format((np.mean(rbf_scores1)*100),
-              (np.mean(rbf_fit_times1)),
-              (np.mean(rbf_score_times1))))
-print("\nAverages for SVM with POLY kernel / set 1 - {:.2f}%, {}, {}."
-      .format((np.mean(poly_scores)*100),
-              (np.mean(poly_fit_times)),
-              (np.mean(poly_score_times))))
-print("Averages for SVM with POLY kernel / set 2 - {:.2f}%, {}, {}."
-      .format((np.mean(poly_scores1)*100),
-              (np.mean(poly_fit_times1)),
-              (np.mean(poly_score_times1))))
+with open('results/output', "w") as text_file:
+    print("\nAverages for SVM with Linear kernel / set 1 - {:.2f}%, {}, {}."
+          .format((np.mean(linear_scores)*100),
+                  (np.mean(linear_fit_times)),
+                  (np.mean(linear_score_times))))
+    print("Averages for SVM with Linear kernel / set 2 - {:.2f}%, {}, {}."
+          .format((np.mean(linear_scores1)*100),
+                  (np.mean(linear_fit_times1)),
+                  (np.mean(linear_score_times1))))
+    print("\nAverages for SVM with RBF kernel / set 1 - {:.2f}%, {}, {}."
+          .format((np.mean(rbf_scores)*100),
+                  (np.mean(rbf_fit_times)),
+                  (np.mean(rbf_score_times))))
+    print("Averages for SVM with RBF kernel / set 2 - {:.2f}%, {}, {}."
+          .format((np.mean(rbf_scores1)*100),
+                  (np.mean(rbf_fit_times1)),
+                  (np.mean(rbf_score_times1))))
+    print("\nAverages for SVM with POLY kernel / set 1 - {:.2f}%, {}, {}."
+          .format((np.mean(poly_scores)*100),
+                  (np.mean(poly_fit_times)),
+                  (np.mean(poly_score_times))))
+    print("Averages for SVM with POLY kernel / set 2 - {:.2f}%, {}, {}."
+          .format((np.mean(poly_scores1)*100),
+                  (np.mean(poly_fit_times1)),
+                  (np.mean(poly_score_times1))))
 
 # End the script.
 end = time.clock()

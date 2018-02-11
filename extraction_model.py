@@ -10,9 +10,6 @@ import math
 import random
 import glob
 
-# Scikit-learn.
-from sklearn.metrics import classification_report
-
 # My imports.
 from constants import HAAR, HAAR2, HAAR3, HAAR4, PRED
 
@@ -280,17 +277,3 @@ def get_sets(emotions):
                 prediction_labels.append(emotions.index(emotion))
 
     return training_data, training_labels, prediction_data, prediction_labels
-
-
-def produce_report(svm, X_test, y_test, num_classes, name):
-    """Produce and print the classification report to file."""
-    predicted_classes = svm.predict(X_test)
-    predicted_classes = np.argmax(np.round(predicted_classes), axis=1)
-    # correct = np.where(predicted_classes == y_test)[0]
-    # print("Found {} correct labels".format(len(correct)))
-    # incorrect = np.where(predicted_classes != y_test)[0]
-    # print("Found {} incorrect labels".format(len(incorrect)))
-    target_names = ["Class {}".format(i) for i in range(num_classes)]
-    with open('roc_curves_reports/report_{}'.format(name), "w") as text_file:
-        print(classification_report(y_test, predicted_classes,
-                                    target_names=target_names), file=text_file)

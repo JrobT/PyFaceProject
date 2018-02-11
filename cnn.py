@@ -12,7 +12,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # My imports.
-import extraction_model as model
+import extraction_model as exmodel
+import evaluation_model as evmodel
 from constants import EMOTIONS_5
 
 # Required methods.
@@ -69,13 +70,13 @@ script_name = os.path.basename(__file__)  # The name of this script
 print("\n{}: Beginning CNN test...\n".format(script_name))
 start = time.clock()  # Start of the speed test. clock() is most accurate
 
-tdata, tlabels, pdata, plabels = model.get_sets_as_images(EMOTIONS_5)
+tdata, tlabels, pdata, plabels = exmodel.get_sets_as_images(EMOTIONS_5)
 
 # Convert to readable arrays.
-X_train = model.convert_numpy(tdata)
-y_train = model.convert_numpy(tlabels)
-X_test = model.convert_numpy(pdata)
-y_test = model.convert_numpy(plabels)
+X_train = exmodel.convert_numpy(tdata)
+y_train = exmodel.convert_numpy(tlabels)
+X_test = exmodel.convert_numpy(pdata)
+y_test = exmodel.convert_numpy(plabels)
 # print('Training data shape : ', X_train.shape, y_train.shape)
 # print('Testing data shape : ', X_test.shape, y_test.shape)
 
@@ -117,17 +118,17 @@ num_classes = 5
 cnn_model = Sequential()
 cnn_model.add(Conv2D(32, kernel_size=(3, 3), activation='linear',
                      input_shape=(380, 380, 1), padding='same'))
-cnn_model.add(Activation('tanh'))
+cnn_model.add(Activation('relu'))
 cnn_model.add(MaxPooling2D((2, 2), padding='same'))
 cnn_model.add(Conv2D(64, (3, 3), activation='linear', padding='same'))
-cnn_model.add(Activation('tanh'))
+cnn_model.add(Activation('relu'))
 cnn_model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
 cnn_model.add(Conv2D(128, (3, 3), activation='linear', padding='same'))
-cnn_model.add(Activation('tanh'))
+cnn_model.add(Activation('relu'))
 cnn_model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
 cnn_model.add(Flatten())
 cnn_model.add(Dense(128, activation='linear'))
-cnn_model.add(Activation('tanh'))
+cnn_model.add(Activation('relu'))
 cnn_model.add(Dense(num_classes, activation='softmax'))
 
 cnn_model.compile(loss=keras.losses.categorical_crossentropy,
@@ -138,32 +139,35 @@ with open('roc_curves_reports/cnn', "w") as text_file:
 cnn_train = cnn_model.fit(X_train, train_lbl, batch_size=batch_size,
                           epochs=epochs, verbose=1,
                           validation_data=(X_valid, valid_lbl))
+y_pred = cnn_train.predict(X_test)
 
 test_eval = cnn_model.evaluate(X_test, y_test_one_hot, verbose=0)
 print('Test loss : ', test_eval[0])
 print('Test accuracy : ', test_eval[1])
 
 name = "CNN (5)"
-model.produce_report(cnn_model, X_test, y_test, num_classes, name)
+evmodel.report(y_test, y_pred, nClasses, name)
+evmodel.matrix(y_test, y_pred, np.unique(y_train), False, name)
+evmodel.matrix(y_test, y_pred, np.unique(y_train), True, name)
 plot_chart(cnn_train)
 
 cnn_model = Sequential()
 cnn_model.add(Conv2D(32, kernel_size=(3, 3), activation='linear',
                      input_shape=(380, 380, 1), padding='same'))
-cnn_model.add(Activation('tanh'))
+cnn_model.add(Activation('relu'))
 cnn_model.add(MaxPooling2D((2, 2), padding='same'))
 cnn_model.add(Dropout(0.25))
 cnn_model.add(Conv2D(64, (3, 3), activation='linear', padding='same'))
-cnn_model.add(Activation('tanh'))
+cnn_model.add(Activation('relu'))
 cnn_model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
 cnn_model.add(Dropout(0.25))
 cnn_model.add(Conv2D(128, (3, 3), activation='linear', padding='same'))
-cnn_model.add(Activation('tanh'))
+cnn_model.add(Activation('relu'))
 cnn_model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
 cnn_model.add(Dropout(0.4))
 cnn_model.add(Flatten())
 cnn_model.add(Dense(128, activation='linear'))
-cnn_model.add(Activation('tanh'))
+cnn_model.add(Activation('relu'))
 cnn_model.add(Dropout(0.3))
 cnn_model.add(Dense(num_classes, activation='softmax'))
 
@@ -181,7 +185,9 @@ print('Test loss : ', test_eval[0])
 print('Test accuracy : ', test_eval[1])
 
 name = "CNN (5_dropout)"
-model.produce_report(cnn_model, X_test, y_test, num_classes, name)
+evmodel.report(y_test, y_pred, nClasses, name)
+evmodel.matrix(y_test, y_pred, np.unique(y_train), False, name)
+evmodel.matrix(y_test, y_pred, np.unique(y_train), True, name)
 plot_chart(cnn_train)
 
 # cnn_model.save("cnn_model_dropout.h5py")
