@@ -294,31 +294,56 @@ for i in range(0, 5):  # 5 testing runs
     """ END OF THE ROUND """
 
     with open('results/output{}'.format(i+1), "w") as text_file:
-        print("\n{}: Test round {} - ".format(script_name, (i+1)))
-        print("\nSVM, LINEAR, Landmarks, List 1:")
-        print("> {:.2f} percent correct.".format(linear_scores[i]*100))
-        print("> Fit time {}".format(linear_fit_times[i]))
-        print("> Test time {}".format(linear_score_times[i]))
-        print("\nSVM, LINEAR, Landmarks, List 2:")
-        print("> {:.2f} percent correct.".format(linear_scores1[i]*100))
-        print("> Fit time {}".format(linear_fit_times1[i]))
-        print("> Test time {}".format(linear_score_times1[i]))
-        print("\nSVM, RBF, Landmarks, List 1:")
-        print("> {:.2f} percent correct.".format(rbf_scores[i]*100))
-        print("> Fit time {}".format(rbf_fit_times[i]))
-        print("> Test time {}".format(rbf_score_times[i]))
-        print("\nSVM, RBF, Landmarks, List 2:")
-        print("> {:.2f} percent correct.".format(rbf_scores1[i]*100))
-        print("> Fit time {}".format(rbf_fit_times1[i]))
-        print("> Test time {}".format(rbf_score_times1[i]))
-        print("\nSVM, POLYNOMIAL, Landmarks, List 1:")
-        print("> {:.2f} percent correct.".format(poly_scores[i]*100))
-        print("> Fit time {}".format(poly_fit_times[i]))
-        print("> Test time {}".format(poly_score_times[i]))
-        print("\nSVM, POLYNOMIAL, Landmarks, List 2:")
-        print("> {:.2f} percent correct.".format(poly_scores1[i]*100))
-        print("> Fit time {}".format(poly_fit_times1[i]))
-        print("> Test time {}".format(poly_score_times1[i]))
+        print("\n{}: Test round {} - ".format(script_name, (i+1)),
+              file=text_file)
+        print("\nSVM, LINEAR, Landmarks, List 1:",
+              file=text_file)
+        print("> {:.2f} percent correct.".format(linear_scores[i]*100),
+              file=text_file)
+        print("> Fit time {}".format(linear_fit_times[i]),
+              file=text_file)
+        print("> Test time {}".format(linear_score_times[i]),
+              file=text_file)
+        print("\nSVM, LINEAR, Landmarks, List 2:",
+              file=text_file)
+        print("> {:.2f} percent correct.".format(linear_scores1[i]*100),
+              file=text_file)
+        print("> Fit time {}".format(linear_fit_times1[i]),
+              file=text_file)
+        print("> Test time {}".format(linear_score_times1[i]),
+              file=text_file)
+        print("\nSVM, RBF, Landmarks, List 1:",
+              file=text_file)
+        print("> {:.2f} percent correct.".format(rbf_scores[i]*100),
+              file=text_file)
+        print("> Fit time {}".format(rbf_fit_times[i]),
+              file=text_file)
+        print("> Test time {}".format(rbf_score_times[i]),
+              file=text_file)
+        print("\nSVM, RBF, Landmarks, List 2:",
+              file=text_file)
+        print("> {:.2f} percent correct.".format(rbf_scores1[i]*100),
+              file=text_file)
+        print("> Fit time {}".format(rbf_fit_times1[i]),
+              file=text_file)
+        print("> Test time {}".format(rbf_score_times1[i]),
+              file=text_file)
+        print("\nSVM, POLYNOMIAL, Landmarks, List 1:",
+              file=text_file)
+        print("> {:.2f} percent correct.".format(poly_scores[i]*100),
+              file=text_file)
+        print("> Fit time {}".format(poly_fit_times[i]),
+              file=text_file)
+        print("> Test time {}".format(poly_score_times[i]),
+              file=text_file)
+        print("\nSVM, POLYNOMIAL, Landmarks, List 2:",
+              file=text_file)
+        print("> {:.2f} percent correct.".format(poly_scores1[i]*100),
+              file=text_file)
+        print("> Fit time {}".format(poly_fit_times1[i]),
+              file=text_file)
+        print("> Test time {}".format(poly_score_times1[i]),
+              file=text_file)
 
 """ END OF THE TEST """
 
@@ -326,27 +351,27 @@ with open('results/output', "w") as text_file:
     print("\nAverages for SVM with Linear kernel / set 1 - {:.2f}%, {}, {}."
           .format((np.mean(linear_scores)*100),
                   (np.mean(linear_fit_times)),
-                  (np.mean(linear_score_times))))
+                  (np.mean(linear_score_times))), file=text_file)
     print("Averages for SVM with Linear kernel / set 2 - {:.2f}%, {}, {}."
           .format((np.mean(linear_scores1)*100),
                   (np.mean(linear_fit_times1)),
-                  (np.mean(linear_score_times1))))
+                  (np.mean(linear_score_times1))), file=text_file)
     print("\nAverages for SVM with RBF kernel / set 1 - {:.2f}%, {}, {}."
           .format((np.mean(rbf_scores)*100),
                   (np.mean(rbf_fit_times)),
-                  (np.mean(rbf_score_times))))
+                  (np.mean(rbf_score_times))), file=text_file)
     print("Averages for SVM with RBF kernel / set 2 - {:.2f}%, {}, {}."
           .format((np.mean(rbf_scores1)*100),
                   (np.mean(rbf_fit_times1)),
-                  (np.mean(rbf_score_times1))))
+                  (np.mean(rbf_score_times1))), file=text_file)
     print("\nAverages for SVM with POLY kernel / set 1 - {:.2f}%, {}, {}."
           .format((np.mean(poly_scores)*100),
                   (np.mean(poly_fit_times)),
-                  (np.mean(poly_score_times))))
+                  (np.mean(poly_score_times))), file=text_file)
     print("Averages for SVM with POLY kernel / set 2 - {:.2f}%, {}, {}."
           .format((np.mean(poly_scores1)*100),
                   (np.mean(poly_fit_times1)),
-                  (np.mean(poly_score_times1))))
+                  (np.mean(poly_score_times1))), file=text_file)
 
 # End the script.
 end = time.clock()

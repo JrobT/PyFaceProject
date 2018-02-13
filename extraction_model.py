@@ -9,6 +9,7 @@ import dlib
 import math
 import random
 import glob
+import matplotlib.pyplot as plt
 
 # My imports.
 from constants import HAAR, HAAR2, HAAR3, HAAR4, PRED
@@ -106,7 +107,7 @@ def get_face_dlib_rects(img):
     detections = faceDet5(img, 1)
 
     if len(detections) > 0:
-        print("DLIB")
+        # print("DLIB")
         return detections
     else:
         haar_detections = faceDet.detectMultiScale(img, scaleFactor=1.1,
@@ -115,7 +116,7 @@ def get_face_dlib_rects(img):
                                                    flags=cv2.CASCADE_SCALE_IMAGE)
         if len(haar_detections) > 0:  # HAAR Cascade found faces
             for (x, y, w, h) in haar_detections:
-                print("HAAR")
+                # print("HAAR")
                 dlib_rect = dlib.rectangle(int(x), int(y), int(x + w), int(y + h))
                 detections.append(dlib_rect)
                 break
@@ -157,6 +158,8 @@ def get_face_dlib_rects(img):
                     break
             else:
                 print("No face found")
+                plt.imshow(img)
+                plt.show()
 
     return detections
 

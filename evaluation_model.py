@@ -18,17 +18,22 @@ import matplotlib.pyplot as plt
 # Import evaluation methods.
 from sklearn.metrics import classification_report, confusion_matrix
 
+# My imports.
+from constants import EMOTIONS_5, EMOTIONS_8
+
 
 def report(y_test, y_pred, n_classes, save_name):
     """Produce and print the classification report to file with save_name."""
-    predicted_classes = np.argmax(np.round(y_pred), axis=1)
-    target_names = ["Class {}".format(i+1) for i in range(n_classes)]
+    if n_classes == 5:
+        target_names = EMOTIONS_5
+    else:
+        target_names = EMOTIONS_8
     with open('results/classreport_{}'.format(save_name), "w") as text_file:
-        print(classification_report(y_test, predicted_classes,
-                                    target_names=target_names), file=text_file)
+        print(classification_report(y_test, y_pred, target_names=target_names),
+              file=text_file)
 
 
-def matrix(y_test, y_pred, classes, save_name, normalize, cmap=plt.cm.Blues):
+def matrix(y_test, y_pred, classes, normalize, save_name, cmap=plt.cm.Blues):
     """Produce and print the confusion matrix to file with save_name."""
     # Compute confusion matrix.
     cm = confusion_matrix(y_test, y_pred)
@@ -37,7 +42,6 @@ def matrix(y_test, y_pred, classes, save_name, normalize, cmap=plt.cm.Blues):
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 
-    fig = plt.figure()
     plt.matshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(save_name)
     plt.colorbar()
@@ -52,11 +56,15 @@ def matrix(y_test, y_pred, classes, save_name, normalize, cmap=plt.cm.Blues):
                  horizontalalignment="center",
                  color="white" if cm[i, j] > thresh else "black")
 
-    norm = "_normalized" if normalize else ""
+    if normalize:
+        norm = "_normalized"
+    else:
+        norm = ""
+
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-    fig.savefig('results/confusion{}_{}'.format(norm, save_name))
+    plt.savefig('results/confusion{}_{}'.format(norm, save_name))
 
 
 # def build_roc_curve(n_classes, y_score, y_test, title):

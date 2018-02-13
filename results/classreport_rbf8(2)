@@ -1,0 +1,13 @@
+             precision    recall  f1-score   support
+
+    neutral       0.00      0.00      0.00         5
+      anger       0.00      0.00      0.00         5
+   contempt       0.00      0.00      0.00         5
+    disgust       0.00      0.00      0.00         5
+       fear       0.00      0.00      0.00         4
+      happy       0.00      0.00      0.00         5
+    sadness       0.14      1.00      0.24         5
+   surprise       0.00      0.00      0.00         3
+
+avg / total       0.02      0.14      0.03        37
+

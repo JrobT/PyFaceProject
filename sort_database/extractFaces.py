@@ -100,7 +100,9 @@ def detect_faces(emotion):
             gray = gray[y:y+h, x:x+w]
 
             try:
-                dim = (380, 380)
+                # r = 100.0 / gray.shape[1]
+                # print(int(gray.shape[0] * r))
+                dim = (380, 100)
                 out = cv2.resize(gray, dim, interpolation=cv2.INTER_AREA)
 
                 filenumber += 1
