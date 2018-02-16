@@ -1,0 +1,32 @@
+
+svms.py: Test round 2 - 
+
+SVM, LINEAR, Landmarks, List 1:
+> 69.79 percent correct.
+> Fit time 11.395745000000716
+> Test time 0.017281000000366475
+
+SVM, LINEAR, Landmarks, List 2:
+> 83.23 percent correct.
+> Fit time 4.909185999999863
+> Test time 0.0081850000005943
+
+SVM, RBF, Landmarks, List 1:
+> 69.10 percent correct.
+> Fit time 100.83780500000012
+> Test time 3.674412000000302
+
+SVM, RBF, Landmarks, List 2:
+> 82.59 percent correct.
+> Fit time 35.54794200000015
+> Test time 1.2013809999998557
+
+SVM, POLYNOMIAL, Landmarks, List 1:
+> 64.97 percent correct.
+> Fit time 109.95160900000064
+> Test time 3.486218000000008
+
+SVM, POLYNOMIAL, Landmarks, List 2:
+> 81.18 percent correct.
+> Fit time 40.7459829999998
+> Test time 1.2989379999999073

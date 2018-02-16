@@ -172,18 +172,19 @@ processes = [multiprocessing.Process(target=threadme1()),
 [process.start() for process in processes]
 [process.join() for process in processes]
 
-print("\n***> Final score for Fisherfaces/8 Emotions: {} percent correct."
-      .format(np.mean(metascore1)))
-print("***> Final score for Fisherfaces/5 Emotions: {} percent correct."
-      .format(np.mean(metascore2)))
-print("***> Final score for Eigenfaces/8 Emotions: {} percent correct."
-      .format(np.mean(metascore3)))
-print("***> Final score for Eigenfaces/5 Emotions: {} percent correct."
-      .format(np.mean(metascore4)))
-print("***> Final score for Local Binary Histograms/8 Emotions: {} percent correct."
-      .format(np.mean(metascore5)))
-print("***> Final score for Local Binary Histograms/5 Emotions: {} percent correct."
-      .format(np.mean(metascore6)))
+with open('results/facemethods', "w") as text_file:
+    print("\n***> Final score for Fisherfaces/8 Emotions: {} percent correct."
+          .format(np.mean(metascore1)))
+    print("***> Final score for Fisherfaces/5 Emotions: {} percent correct."
+          .format(np.mean(metascore2)))
+    print("***> Final score for Eigenfaces/8 Emotions: {} percent correct."
+          .format(np.mean(metascore3)))
+    print("***> Final score for Eigenfaces/5 Emotions: {} percent correct."
+          .format(np.mean(metascore4)))
+    print("***> Final score for Local Binary Histograms/8 Emotions: {} percent correct."
+          .format(np.mean(metascore5)))
+    print("***> Final score for Local Binary Histograms/5 Emotions: {} percent correct."
+          .format(np.mean(metascore6)))
 
 # End the script.
 end = time.clock()

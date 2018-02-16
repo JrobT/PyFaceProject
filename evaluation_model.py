@@ -61,10 +61,29 @@ def matrix(y_test, y_pred, classes, normalize, save_name, cmap=plt.cm.Blues):
     else:
         norm = ""
 
-    plt.tight_layout()
+    # plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     plt.savefig('results/confusion{}_{}'.format(norm, save_name))
+
+
+def plot_chart(cnn_train, name):
+    """Plot accuracy and loss points between training and testing data."""
+    accuracy = cnn_train.history['acc']
+    val_accuracy = cnn_train.history['val_acc']
+    loss = cnn_train.history['loss']
+    val_loss = cnn_train.history['val_loss']
+    epochs = range(len(accuracy))
+    plt.plot(epochs, accuracy, 'bo', label='Training accuracy')
+    plt.plot(epochs, val_accuracy, 'b', label='Validation accuracy')
+    plt.title('Training and validation accuracy')
+    plt.legend()
+    plt.figure()
+    plt.plot(epochs, loss, 'bo', label='Training loss')
+    plt.plot(epochs, val_loss, 'b', label='Validation loss')
+    plt.title('Training and validation loss')
+    plt.legend()
+    plt.savefig('results/{}_chart'.format(name))
 
 
 # def build_roc_curve(n_classes, y_score, y_test, title):

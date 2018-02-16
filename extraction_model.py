@@ -9,7 +9,6 @@ import dlib
 import math
 import random
 import glob
-import matplotlib.pyplot as plt
 
 # My imports.
 from constants import HAAR, HAAR2, HAAR3, HAAR4, PRED
@@ -37,7 +36,7 @@ def convert_numpy(data):
 
 def get_images(emotion):
     """Split dataset into 80 percent training set and 20 percent prediction."""
-    files = glob.glob("sort_database//database//{}//*".format(emotion))
+    files = glob.glob("sort_database//database_notresized//{}//*".format(emotion))
     random.shuffle(files)
     training = files[:int(len(files) * training_set_size)]
     prediction = files[-int(len(files) * testing_set_size):]
@@ -93,8 +92,8 @@ def get_face_opencv_vectors(img):
                                                          flags=cv2.CASCADE_SCALE_IMAGE)
             if len(haar_detections4) > 0:  # HAAR Cascade 4 found faces
                 facefeatures = haar_detections4
-            else:
-                print("No face found")
+            # else:
+            #     print("No face found")
 
     return facefeatures
 
@@ -107,7 +106,6 @@ def get_face_dlib_rects(img):
     detections = faceDet5(img, 1)
 
     if len(detections) > 0:
-        # print("DLIB")
         return detections
     else:
         haar_detections = faceDet.detectMultiScale(img, scaleFactor=1.1,
@@ -116,7 +114,6 @@ def get_face_dlib_rects(img):
                                                    flags=cv2.CASCADE_SCALE_IMAGE)
         if len(haar_detections) > 0:  # HAAR Cascade found faces
             for (x, y, w, h) in haar_detections:
-                # print("HAAR")
                 dlib_rect = dlib.rectangle(int(x), int(y), int(x + w), int(y + h))
                 detections.append(dlib_rect)
                 break
@@ -127,7 +124,6 @@ def get_face_dlib_rects(img):
                                                          minSize=(5, 5),
                                                          flags=cv2.CASCADE_SCALE_IMAGE)
             if len(haar_detections2) > 0:  # HAAR Cascade 2 found faces
-                print("HAAR2")
                 for (x, y, w, h) in haar_detections2:
                     dlib_rect = dlib.rectangle(int(x), int(y), int(x + w), int(y + h))
                     detections.append(dlib_rect)
@@ -140,7 +136,6 @@ def get_face_dlib_rects(img):
                                                          flags=cv2.CASCADE_SCALE_IMAGE)
             if len(haar_detections3) > 0:  # HAAR Cascade 3 found faces
                 for (x, y, w, h) in haar_detections3:
-                    print("HAAR3")
                     dlib_rect = dlib.rectangle(int(x), int(y), int(x + w), int(y + h))
                     detections.append(dlib_rect)
                     break
@@ -152,14 +147,11 @@ def get_face_dlib_rects(img):
                                                          flags=cv2.CASCADE_SCALE_IMAGE)
             if len(haar_detections4) > 0:  # HAAR Cascade 4 found faces
                 for (x, y, w, h) in haar_detections4:
-                    print("HAAR4")
                     dlib_rect = dlib.rectangle(int(x), int(y), int(x + w), int(y + h))
                     detections.append(dlib_rect)
                     break
-            else:
-                print("No face found")
-                plt.imshow(img)
-                plt.show()
+            # else:
+                # print("No face found")
 
     return detections
 
@@ -223,6 +215,7 @@ def get_sets_as_images(emotions):
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
             clahe_image = clahe.apply(gray)
+            # clahe_image = cv2.equalizeHist(gray)
             check = get_face_dlib_rects(clahe_image)
 
             if len(check) > 0:
@@ -233,7 +226,8 @@ def get_sets_as_images(emotions):
             image = cv2.imread(item)  # Open image
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-            clahe_image = clahe.apply(gray)
+            # clahe_image = clahe.apply(gray)
+            clahe_image = cv2.equalizeHist(gray)
             check = get_face_dlib_rects(clahe_image)
 
             if len(check) > 0:
@@ -262,6 +256,8 @@ def get_sets(emotions):
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
             clahe_image = clahe.apply(gray)
+            # clahe_image = cv2.equalizeHist(gray)
+            # cv2.imwrite('clahe.png', clahe_image)
             facefeatures = get_face_landmarks(clahe_image)
 
             if (facefeatures != "error"):
@@ -272,7 +268,8 @@ def get_sets(emotions):
             image = cv2.imread(item)  # Open image
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-            clahe_image = clahe.apply(gray)
+            # clahe_image = clahe.apply(gray)
+            clahe_image = cv2.equalizeHist(gray)
             facefeatures = get_face_landmarks(clahe_image)
 
             if (facefeatures != "error"):

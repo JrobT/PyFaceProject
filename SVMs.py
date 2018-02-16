@@ -45,6 +45,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, label_binarize
 from sklearn.svm import LinearSVC, SVC
 from sklearn.multiclass import OneVsRestClassifier
+from sklearn.model_selection import GridSearchCV
 
 # My imports.
 import extraction_model as exmodel
@@ -58,6 +59,41 @@ print(__doc__)
 script_name = os.path.basename(__file__)  # The name of this script
 print("\n{}: Beginning Support Vector Machine tests...\n".format(script_name))
 start = time.clock()  # Start of the speed test. clock() is most accurate
+
+
+def rbf_param_selection(X, y):
+    """."""
+    Cs = [0.01, 0.1, 1, 5, 10]
+    gammas = [0.01, 0.1, 1, 5, 10]
+    param_grid = {'C': Cs, 'gamma': gammas}
+    grid_search = GridSearchCV(SVC(kernel='rbf'), param_grid)
+    grid_search.fit(X, y)
+    grid_search.best_params_
+    return grid_search.best_params_
+
+
+def linear_param_selection(X, y):
+    """."""
+    Cs = [0.01, 0.1, 1, 5, 10]
+    param_grid = {'C': Cs}
+    grid_search = GridSearchCV(SVC(kernel='linear'), param_grid)
+    grid_search.fit(X, y)
+    grid_search.best_params_
+    return grid_search.best_params_
+
+
+def poly_param_selection(X, y):
+    """."""
+    Cs = [0.01, 0.1, 1, 5, 10]
+    gammas = [0.01, 0.1, 1, 5, 10]
+    degreeValues = [1, 2, 3]
+    coef0Values = [0, 1, 2]
+    param_grid = {'C': Cs, 'gamma': gammas,
+                  'degree': degreeValues, 'coef0': coef0Values}
+    grid_search = GridSearchCV(SVC(kernel='poly'), param_grid)
+    grid_search.fit(X, y)
+    grid_search.best_params_
+    return grid_search.best_params_
 
 
 # def get_pca(emotions):
@@ -79,6 +115,12 @@ start = time.clock()  # Start of the speed test. clock() is most accurate
 #
 #     return X_train_pca, X_test_pca, y_train, y_test
 
+X_train1, y_train1, X_test1, y_test1 = exmodel.get_sets(EMOTIONS_5)
+X = X_train1 + X_test1
+y = y_train1 + y_test1
+print(rbf_param_selection(X, y))
+print(linear_param_selection(X, y))
+print(poly_param_selection(X, y))
 
 """ Test the classifiers! """
 
@@ -113,17 +155,19 @@ fit_time = 0
 score_time = 0
 
 # Build classifiers.
+# GridSearchCV found C=0.01 to be optimal parameter.
 lin_svm_clf = Pipeline([
     ("scaler", StandardScaler()),
-    ("linear_svc", LinearSVC(C=1, loss="hinge"))
+    ("linear_svc", LinearSVC(C=0.01, loss="hinge"))
 ])
+# GridSearchCV found C=5, gamma=0.01 to be optimal parameters.
 rbf_svm_clf = Pipeline((
     ("scaler", StandardScaler()),
-    ("svc_clf", SVC(kernel="rbf", gamma=5, C=0.001, probability=True))
+    ("svc_clf", SVC(kernel="rbf", C=5, gamma=0.01, probability=True))
 ))
 poly_svm_clf = Pipeline((
     ("scaler", StandardScaler()),
-    ("svc_clf", SVC(kernel="poly", degree=3, coef0=1, C=5, probability=True))
+    ("svc_clf", SVC(kernel="poly", C=1, probability=True))
 ))
 
 for i in range(0, 5):  # 5 testing runs
@@ -161,10 +205,19 @@ for i in range(0, 5):  # 5 testing runs
     score_time_stop = time.clock()
     score_time = score_time_stop-score_time_start
 
+    # Output classification report and confusion matrix.
     name = "linear8({})".format(i+1)
     evmodel.report(y_test, y_pred, n_classes, name)
     evmodel.matrix(y_test, y_pred, np.unique(y_train), False, name)
     evmodel.matrix(y_test, y_pred, np.unique(y_train), True, name)
+
+    # Output the results.
+    with open('results/{}_round{}'.format(name, i+1), "w") as text_file:
+        print(name, file=text_file)
+        print("> {:.2f} percent correct.".format(linear_score*100),
+              file=text_file)
+        print("> Fit time {}".format(fit_time), file=text_file)
+        print("> Test time {}".format(score_time), file=text_file)
 
     # Append this rounds scores and times to the respective metascore array.
     linear_scores.append(linear_score)
@@ -191,6 +244,13 @@ for i in range(0, 5):  # 5 testing runs
     evmodel.matrix(y_test1, y_pred, np.unique(y_train1), False, name)
     evmodel.matrix(y_test1, y_pred, np.unique(y_train1), True, name)
 
+    with open('results/{}_round{}'.format(name, i+1), "w") as text_file:
+        print(name, file=text_file)
+        print("> {:.2f} percent correct.".format(linear_score*100),
+              file=text_file)
+        print("> Fit time {}".format(fit_time), file=text_file)
+        print("> Test time {}".format(score_time), file=text_file)
+
     linear_scores1.append(linear_score)
     linear_fit_times1.append(fit_time)
     linear_score_times1.append(score_time)
@@ -214,6 +274,13 @@ for i in range(0, 5):  # 5 testing runs
     evmodel.report(y_test, y_pred, n_classes, name)
     evmodel.matrix(y_test, y_pred, np.unique(y_train), False, name)
     evmodel.matrix(y_test, y_pred, np.unique(y_train), True, name)
+
+    with open('results/{}_round{}'.format(name, i+1), "w") as text_file:
+        print(name, file=text_file)
+        print("> {:.2f} percent correct.".format(rbf_score*100),
+              file=text_file)
+        print("> Fit time {}".format(fit_time), file=text_file)
+        print("> Test time {}".format(score_time), file=text_file)
 
     rbf_scores.append(rbf_score)
     rbf_fit_times.append(fit_time)
@@ -239,6 +306,13 @@ for i in range(0, 5):  # 5 testing runs
     evmodel.matrix(y_test1, y_pred, np.unique(y_train1), False, name)
     evmodel.matrix(y_test1, y_pred, np.unique(y_train1), True, name)
 
+    with open('results/{}_round{}'.format(name, i+1), "w") as text_file:
+        print(name, file=text_file)
+        print("> {:.2f} percent correct.".format(rbf_score*100),
+              file=text_file)
+        print("> Fit time {}".format(fit_time), file=text_file)
+        print("> Test time {}".format(score_time), file=text_file)
+
     rbf_scores1.append(rbf_score)
     rbf_fit_times1.append(fit_time)
     rbf_score_times1.append(score_time)
@@ -263,6 +337,13 @@ for i in range(0, 5):  # 5 testing runs
     evmodel.matrix(y_test, y_pred, np.unique(y_train), False, name)
     evmodel.matrix(y_test, y_pred, np.unique(y_train), True, name)
 
+    with open('results/{}_round{}'.format(name, i+1), "w") as text_file:
+        print(name, file=text_file)
+        print("> {:.2f} percent correct.".format(poly_score*100),
+              file=text_file)
+        print("> Fit time {}".format(fit_time), file=text_file)
+        print("> Test time {}".format(score_time), file=text_file)
+
     poly_scores.append(poly_score)
     poly_fit_times.append(fit_time)
     poly_score_times.append(score_time)
@@ -286,6 +367,13 @@ for i in range(0, 5):  # 5 testing runs
     evmodel.report(y_test1, y_pred, n_classes1, name)
     evmodel.matrix(y_test1, y_pred, np.unique(y_train1), False, name)
     evmodel.matrix(y_test1, y_pred, np.unique(y_train1), True, name)
+
+    with open('results/{}_round{}'.format(name, i+1), "w") as text_file:
+        print(name, file=text_file)
+        print("> {:.2f} percent correct.".format(poly_score*100),
+              file=text_file)
+        print("> Fit time {}".format(fit_time), file=text_file)
+        print("> Test time {}".format(score_time), file=text_file)
 
     poly_scores1.append(poly_score)
     poly_fit_times1.append(fit_time)

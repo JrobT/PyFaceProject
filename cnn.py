@@ -44,25 +44,6 @@ def demo_images(X_train, y_train, X_test, y_test):
     plt.show()
 
 
-def plot_chart(cnn_train):
-    """Plot accuracy and loss points between training and testing data."""
-    accuracy = cnn_train.history['acc']
-    val_accuracy = cnn_train.history['val_acc']
-    loss = cnn_train.history['loss']
-    val_loss = cnn_train.history['val_loss']
-    epochs = range(len(accuracy))
-    plt.plot(epochs, accuracy, 'bo', label='Training accuracy')
-    plt.plot(epochs, val_accuracy, 'b', label='Validation accuracy')
-    plt.title('Training and validation accuracy')
-    plt.legend()
-    plt.figure()
-    plt.plot(epochs, loss, 'bo', label='Training loss')
-    plt.plot(epochs, val_loss, 'b', label='Validation loss')
-    plt.title('Training and validation loss')
-    plt.legend()
-    plt.show()
-
-
 print(__doc__)
 
 # Start the script.
@@ -133,7 +114,7 @@ cnn_model.add(Dense(num_classes, activation='softmax'))
 
 cnn_model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer=keras.optimizers.Adam(), metrics=['accuracy'])
-with open('roc_curves_reports/cnn', "w") as text_file:
+with open('results/cnn_summary', "w") as text_file:
     print(cnn_model.summary())
 
 cnn_train = cnn_model.fit(X_train, train_lbl, batch_size=batch_size,
@@ -142,14 +123,16 @@ cnn_train = cnn_model.fit(X_train, train_lbl, batch_size=batch_size,
 y_pred = cnn_train.predict(X_test)
 
 test_eval = cnn_model.evaluate(X_test, y_test_one_hot, verbose=0)
-print('Test loss : ', test_eval[0])
-print('Test accuracy : ', test_eval[1])
+# Output the results.
+with open('results/cnn_acc', "w") as text_file:
+    print('Test loss : ', test_eval[0])
+    print('Test accuracy : ', test_eval[1])
 
-name = "CNN (5)"
+name = "cnn"
 evmodel.report(y_test, y_pred, nClasses, name)
 evmodel.matrix(y_test, y_pred, np.unique(y_train), False, name)
 evmodel.matrix(y_test, y_pred, np.unique(y_train), True, name)
-plot_chart(cnn_train)
+evmodel.plot_chart(cnn_train, name)
 
 cnn_model = Sequential()
 cnn_model.add(Conv2D(32, kernel_size=(3, 3), activation='linear',
@@ -173,7 +156,7 @@ cnn_model.add(Dense(num_classes, activation='softmax'))
 
 cnn_model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer=keras.optimizers.Adam(), metrics=['accuracy'])
-with open('roc_curves_reports/cnn_dropout', "w") as text_file:
+with open('results/cnn_dropout_summary', "w") as text_file:
     print(cnn_model.summary())
 
 cnn_train = cnn_model.fit(X_train, train_lbl, batch_size=batch_size,
@@ -181,14 +164,16 @@ cnn_train = cnn_model.fit(X_train, train_lbl, batch_size=batch_size,
                           validation_data=(X_valid, valid_lbl))
 
 test_eval = cnn_model.evaluate(X_test, y_test_one_hot, verbose=1)
-print('Test loss : ', test_eval[0])
-print('Test accuracy : ', test_eval[1])
+# Output the results.
+with open('results/cnn_dropout_acc', "w") as text_file:
+    print('Test loss : ', test_eval[0])
+    print('Test accuracy : ', test_eval[1])
 
-name = "CNN (5_dropout)"
+name = "cnn_dropout"
 evmodel.report(y_test, y_pred, nClasses, name)
 evmodel.matrix(y_test, y_pred, np.unique(y_train), False, name)
 evmodel.matrix(y_test, y_pred, np.unique(y_train), True, name)
-plot_chart(cnn_train)
+evmodel.plot_chart(cnn_train, name)
 
 # cnn_model.save("cnn_model_dropout.h5py")
 
