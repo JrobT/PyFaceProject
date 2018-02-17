@@ -50,7 +50,7 @@ from sklearn.model_selection import GridSearchCV
 # My imports.
 import extraction_model as exmodel
 import evaluation_model as evmodel
-from constants import EMOTIONS_8, EMOTIONS_5
+from sort_database.utils import EMOTIONS_8, EMOTIONS_5
 
 
 print(__doc__)
@@ -62,7 +62,7 @@ start = time.clock()  # Start of the speed test. clock() is most accurate
 
 
 def rbf_param_selection(X, y):
-    """."""
+    """Find best parameters for rbf kernel."""
     Cs = [0.01, 0.1, 1, 5, 10]
     gammas = [0.01, 0.1, 1, 5, 10]
     param_grid = {'C': Cs, 'gamma': gammas}
@@ -73,7 +73,7 @@ def rbf_param_selection(X, y):
 
 
 def linear_param_selection(X, y):
-    """."""
+    """Find best parameters for linear kernel."""
     Cs = [0.01, 0.1, 1, 5, 10]
     param_grid = {'C': Cs}
     grid_search = GridSearchCV(SVC(kernel='linear'), param_grid)
@@ -83,7 +83,7 @@ def linear_param_selection(X, y):
 
 
 def poly_param_selection(X, y):
-    """."""
+    """Find best parameters for polynomial kernel."""
     Cs = [0.01, 0.1, 1, 5, 10]
     gammas = [0.01, 0.1, 1, 5, 10]
     degreeValues = [1, 2, 3]
@@ -114,6 +114,7 @@ def poly_param_selection(X, y):
 #     X_test_pca = pca.transform(X_test)
 #
 #     return X_train_pca, X_test_pca, y_train, y_test
+
 
 X_train1, y_train1, X_test1, y_test1 = exmodel.get_sets(EMOTIONS_5)
 X = X_train1 + X_test1

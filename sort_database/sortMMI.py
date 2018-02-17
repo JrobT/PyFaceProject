@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """Python script to sort the MMI Facial Expression Database.
 
 The MMI dataset images have been analysed using Amazon Mechanical Turk, and
@@ -16,32 +17,21 @@ Via https://mmifacedb.eu/:
 I found the Action Units were fairly inconsistent. Therefore I used Amazon's
 worker service 'Mechanical Turk' to classify the images via a questionaire.
 
+TODO : This is still stupid.
+
 I requested an account and was granted permission for use.
 """
-from PIL import Image
+
+# Import packages.
+import csv
 from shutil import copyfile
 from pathlib import Path
 
-import csv
-import PIL
+# My imports.
+from utils import standardise_image
 
 
 dataset = "MMI"
-
-
-def standardise_image(pic):
-    """Save image in resized, standard format."""
-    try:
-        img = Image.open(open(pic, 'rb')).convert('LA')  # Grayscale
-    except IOError:
-        print("File open error occurred.")
-
-    basewidth = 480  # Resize
-    wpercent = (basewidth / float(img.size[0]))
-    hsize = int((float(img.size[1]) * float(wpercent)))
-    img = img.resize((basewidth, hsize), PIL.Image.ANTIALIAS)
-
-    img.save(pic, "PNG")  # Save as .png
 
 
 print("***> Processing MMI Facial Expression Database...")
@@ -53,29 +43,30 @@ imgName = ""
 with open('MMI_dataset//batch.csv') as csvfile:  # Coded using Mechanical Turk
     reader = csv.DictReader(csvfile)
     for row in reader:
-        cnt += 1
         temp = int(row['AvgRate'])
         avg += temp
         imgName = row['Input.image_url']
-        fpath = "MMI_dataset//images//{}".format(imgName)
+        fpath = "MMI_dataset//images//{0!s}".format(imgName)
 
         my_file = Path(fpath)
         if my_file.is_file():
+            cnt += 1
+
             # Use the emotion declared in row to build destination string.
-            if row['Anger'] == "1":
-                dest_emot = "combined_dataset//{}//MMI{}.png".format("anger", cnt)
+            if (row['Anger'] == "1"):
+                dest_emot = "combined_dataset//{}//{}_{}_{}.png".format("anger", dataset, cnt, "frontal")
             elif row['Contempt'] == "1":
-                dest_emot = "combined_dataset//{}//MMI{}.png".format("contempt", cnt)
+                dest_emot = "combined_dataset//{}//{}_{}_{}.png".format("contempt", dataset, cnt, "frontal")
             elif row['Disgust'] == "1":
-                dest_emot = "combined_dataset//{}//MMI{}.png".format("disgust", cnt)
+                dest_emot = "combined_dataset//{}//{}_{}_{}.png".format("disgust", dataset, cnt, "frontal")
             elif row['Fear'] == "1":
-                dest_emot = "combined_dataset//{}//MMI{}.png".format("fear", cnt)
+                dest_emot = "combined_dataset//{}//{}_{}_{}.png".format("fear", dataset, cnt, "frontal")
             elif row['Happy'] == "1":
-                dest_emot = "combined_dataset//{}//MMI{}.png".format("happy", cnt)
+                dest_emot = "combined_dataset//{}//{}_{}_{}.png".format("happy", dataset, cnt, "frontal")
             elif row['Sadness'] == "1":
-                dest_emot = "combined_dataset//{}//MMI{}.png".format("sadness", cnt)
+                dest_emot = "combined_dataset//{}//{}_{}_{}.png".format("sadness", dataset, cnt, "frontal")
             elif row['Surprise'] == "1":
-                dest_emot = "combined_dataset//{}//MMI{}.png".format("surprise", cnt)
+                dest_emot = "combined_dataset//{}//{}_{}_{}.png".format("surprise", dataset, cnt, "frontal")
 
             # All images are kept to a standardised format.
             standardise_image(fpath)
@@ -83,11 +74,11 @@ with open('MMI_dataset//batch.csv') as csvfile:  # Coded using Mechanical Turk
             # Finally, copy the files to the combined dataset.
             copyfile(fpath, dest_emot)
 
-            print("{}: Using 'batch.csv' - Copied {} to {}."
-                  .format(dataset, imgName.replace("//", "/"),
-                          dest_emot.replace("//", "/")))
-        else:
-            print("{}: File was deleted.".format(dataset))
+            print("Successful copy number {} for {} dataset."
+                  .format(cnt, dataset))
+        # else:
+        #     print("{}: File was deleted.".format(dataset))
 
-print("\n***> Average Ranking of Amazon Mechanical Turk accurancy is {} percent."
-      .format(int(avg/cnt)))
+with open('MMI_turk_accuracy', "w") as text_file:
+    print("***> Average Ranking of Amazon Mechanical Turk accuracy is {}%."
+          .format(int(avg/cnt)))

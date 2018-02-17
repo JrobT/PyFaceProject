@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """Python3 script to extract faces from an image.
 
 After my database is complete, I must look to see if a face can be found within
@@ -14,8 +15,7 @@ This script should take a while, as it is processing around 6000 images and
 running potentially 5 face detectors on the image. OpenCV resizing errors may
 be expected for a few images, any other errors should be treated as unexpected.
 
-Testing the effect of resizing images on classification accuracy. CNN requires
-resizing.
+TODO : CNN requires resized images.
 """
 
 # Import packages.
@@ -25,26 +25,20 @@ import os
 import time
 import dlib
 
+# My imports.
+from utils import EMOTIONS_8, HAAR, HAAR2, HAAR3, HAAR4
+
 
 # Start the script.
 script_name = os.path.basename(__file__)  # The name of this script
 print("\nBeginning to extract faces from the images...".format(script_name))
 start = time.clock()  # Start of the speed test. ``clock()'' is most accurate.
 
-emotions = ["neutral", "anger", "contempt", "disgust",
-            "fear", "happy", "sadness", "surprise"]  # The emotion list
-
-# HAAR Cascade Face Classifiers.
-haar = 'OpenCV_HAAR_CASCADES//haarcascade_frontalface_default.xml'
-haar2 = 'OpenCV_HAAR_CASCADES//haarcascade_frontalface_alt2.xml'
-haar3 = 'OpenCV_HAAR_CASCADES//haarcascade_frontalface_alt.xml'
-haar4 = 'OpenCV_HAAR_CASCADES//haarcascade_frontalface_alt_tree.xml'
-
 # Set Face Detectors.
-faceDet = cv2.CascadeClassifier(haar)
-faceDet2 = cv2.CascadeClassifier(haar2)
-faceDet3 = cv2.CascadeClassifier(haar3)
-faceDet4 = cv2.CascadeClassifier(haar4)
+faceDet = cv2.CascadeClassifier(HAAR)
+faceDet2 = cv2.CascadeClassifier(HAAR2)
+faceDet3 = cv2.CascadeClassifier(HAAR3)
+faceDet4 = cv2.CascadeClassifier(HAAR4)
 faceDet5 = dlib.get_frontal_face_detector()  # dlib's face detector
 
 
@@ -58,13 +52,14 @@ def resize(gray):
 
 def detect_faces(emotion):
     """Use the classifers to detect faces."""
-    files = glob.glob('combined_dataset//%s//*' % emotion)
+    files = glob.glob('combined_dataset//{0!s}//*'.format(emotion))
 
     filenumber = 0  # Keep track of the number of images in the final dataset
     for f in files:
         haar_detections = []
         facefeatures = []
-        print("***> Detecting faces in file %s." % (f.replace("//", "/")))
+        print("***> Detecting faces in file {0!s}."
+              .format(f.replace("//", "/")))
 
         frame = cv2.imread(f)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # Grayscale
@@ -73,7 +68,7 @@ def detect_faces(emotion):
         # Use detectors to detect faces in the frame.
         detections = faceDet5(gray, 1)
 
-        if len(detections) > 0:  # dlib found faces
+        if len(detections) > 0:  # dlib finds faces most of the time
             for face in detections:
                 x = face.left()
                 y = face.top()
@@ -88,7 +83,7 @@ def detect_faces(emotion):
             if len(haar_detections) > 0:  # HAAR Cascade found faces
                 facefeatures = haar_detections
 
-            if len(facefeatures) == 0:
+            if len(facefeatures) == 0:  # Face is still not found
                 haar_detections2 = faceDet2.detectMultiScale(gray, scaleFactor=1.1,
                                                              minNeighbors=10,
                                                              minSize=(5, 5),
@@ -111,21 +106,20 @@ def detect_faces(emotion):
                                                              flags=cv2.CASCADE_SCALE_IMAGE)
                 if len(haar_detections4) > 0:  # HAAR Cascade 4 found faces
                     facefeatures = haar_detections4
-                else:
-                    facefeatures = []
+                # else:
+                    # cv2.imwrite('detectfail.png', gray)
 
         for (x, y, w, h) in facefeatures:
-            print("Found a face!!")
+            # print("Found a face!!")
             # cv2.imwrite('found.png', gray)
             # gray = gray[y:y+h, x:x+w]  # extract region of interest
             # cv2.imwrite('roi.png', gray)
 
             try:
                 # gray = resize(gray)
-
-                filenumber += 1
-                cv2.imwrite("database_notresized//{}//{}.png".format(emotion, filenumber),
+                cv2.imwrite("database//{}//{}.png".format(emotion, filenumber),
                             gray)
+                filenumber += 1
             except:
                 continue
 
@@ -133,13 +127,16 @@ def detect_faces(emotion):
 
 
 total = 0
-for emotion in emotions:
+for emotion in EMOTIONS_8:
     filenum = detect_faces(emotion)
     total += filenum
-    print("\n***> {} has {} images.\n".format(emotion, filenum))
+    print("***> \"{}\" has {} images.".format(emotion, filenum))
 
-print("***** Total Size of Dataset - {} *****\n".format(total))
+print("***> Total Size of Dataset - {}".format(total))
 
 # End the script.
 end = time.clock()
-print("***** Time elapsed: {} *****".format(end - start))
+hours, rem = divmod(end - start, 3600)
+minutes, seconds = divmod(rem, 60)
+print("\n***> Time elapsed: {:0>2}:{:0>2}:{:05.2f}."
+      .format(int(hours), int(minutes), seconds))

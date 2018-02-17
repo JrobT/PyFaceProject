@@ -11,18 +11,18 @@ import random
 import glob
 
 # My imports.
-from constants import HAAR, HAAR2, HAAR3, HAAR4, PRED
+from sort_database.utils import HAAR, HAAR2, HAAR3, HAAR4, PRED
 
 # Set Face Detectors.
-faceDet = cv2.CascadeClassifier(HAAR)
-faceDet2 = cv2.CascadeClassifier(HAAR2)
-faceDet3 = cv2.CascadeClassifier(HAAR3)
-faceDet4 = cv2.CascadeClassifier(HAAR4)
+faceDet = cv2.CascadeClassifier("sort_database//" + HAAR)
+faceDet2 = cv2.CascadeClassifier("sort_database//" + HAAR2)
+faceDet3 = cv2.CascadeClassifier("sort_database//" + HAAR3)
+faceDet4 = cv2.CascadeClassifier("sort_database//" + HAAR4)
 faceDet5 = dlib.get_frontal_face_detector()  # dlib's face detector
 
 # Build the required objects.
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-predictor = dlib.shape_predictor(PRED)
+predictor = dlib.shape_predictor("sort_database//" + PRED)
 
 # Default sizes of training and testing sets (as ratios of the dataset)
 training_set_size = 0.8
@@ -36,7 +36,7 @@ def convert_numpy(data):
 
 def get_images(emotion):
     """Split dataset into 80 percent training set and 20 percent prediction."""
-    files = glob.glob("sort_database//database_notresized//{}//*".format(emotion))
+    files = glob.glob("sort_database//database//{}//*".format(emotion))
     random.shuffle(files)
     training = files[:int(len(files) * training_set_size)]
     prediction = files[-int(len(files) * testing_set_size):]

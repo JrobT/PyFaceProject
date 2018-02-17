@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, confusion_matrix
 
 # My imports.
-from constants import EMOTIONS_5, EMOTIONS_8
+from sort_database.utils import EMOTIONS_5, EMOTIONS_8
 
 
 def report(y_test, y_pred, n_classes, save_name):
