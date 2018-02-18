@@ -46,6 +46,18 @@ def get_images(emotion):
     return training, prediction
 
 
+def get_images2(emotion):
+    """Split dataset into 80 percent training set and 20 percent prediction."""
+    files = glob.glob("sort_database//database2//{}//*".format(emotion))
+    random.shuffle(files)
+    training = files[:int(len(files) * training_set_size)]
+    prediction = files[-int(len(files) * testing_set_size):]
+    # for testing
+    # training = files[:5]
+    # prediction = files[-5:]
+    return training, prediction
+
+
 def get_face_opencv_vectors(img):
     """Get all the faces as OpenCV vectors."""
     haar_detections = []
@@ -205,7 +217,7 @@ def get_sets_as_images(emotions):
 
     for emotion in emotions:
         print("Obtaining images that represent ``{}''.".format(emotion))
-        training, prediction = get_images(emotion)
+        training, prediction = get_images2(emotion)
 
         print("Allocating {}. This directory contains {} images."
               .format(emotion, len(training)+len(prediction)))

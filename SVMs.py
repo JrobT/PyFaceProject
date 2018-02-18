@@ -32,20 +32,12 @@ each method and label its output.
 """
 
 # Import packages.
-import numpy as np  # SVC methods will accept numpy arrays
 import os
 import time
-
-# Trying PCA.
-# from imutils import face_utils
-# from sklearn.decomposition import PCA
-
-# Importing Scikit-Learn preprocessors.
+import numpy as np
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, label_binarize
+from sklearn.preprocessing import StandardScaler
 from sklearn.svm import LinearSVC, SVC
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn.model_selection import GridSearchCV
 
 # My imports.
 import extraction_model as exmodel
@@ -58,70 +50,42 @@ print(__doc__)
 # Start the script.
 script_name = os.path.basename(__file__)  # The name of this script
 print("\n{}: Beginning Support Vector Machine tests...\n".format(script_name))
-start = time.clock()  # Start of the speed test. clock() is most accurate
+start = time.clock()  # Start of the speed test. clock() is most accurate.
 
 
-def rbf_param_selection(X, y):
-    """Find best parameters for rbf kernel."""
-    Cs = [0.01, 0.1, 1, 5, 10]
-    gammas = [0.01, 0.1, 1, 5, 10]
-    param_grid = {'C': Cs, 'gamma': gammas}
-    grid_search = GridSearchCV(SVC(kernel='rbf'), param_grid)
-    grid_search.fit(X, y)
-    grid_search.best_params_
-    return grid_search.best_params_
+# Build classifiers.
+f = open('results/svm_params', 'r')
+params = f.read()
+for k, v in params.items():
+    for val in v:
+        svc = LinearSVC(C=0.01, loss="hinge")
+        svc = svc.set_params(**{k: val})
+        lin_svm_clf = Pipeline((
+            ("scaler", StandardScaler()),
+            ("linear_svc", svc)
+        ))
+        print(lin_svm_clf)
+params = f.read()
+for k, v in params.items():
+    for val in v:
+        svc = SVC(kernel="rbf", C=5, gamma=0.01, probability=True)
+        svc = svc.set_params(**{k: val})
+        rbf_svm_clf = Pipeline((
+            ("scaler", StandardScaler()),
+            ("svc_clf", svc)
+        ))
+        print(rbf_svm_clf)
+params = f.read()
+for k, v in params.items():
+    for val in v:
+        svc = SVC(kernel="poly", C=1, probability=True)
+        svc = svc.set_params(**{k: val})
+        poly_svm_clf = Pipeline((
+            ("scaler", StandardScaler()),
+            ("svc_clf", svc)
+        ))
+        print(poly_svm_clf)
 
-
-def linear_param_selection(X, y):
-    """Find best parameters for linear kernel."""
-    Cs = [0.01, 0.1, 1, 5, 10]
-    param_grid = {'C': Cs}
-    grid_search = GridSearchCV(SVC(kernel='linear'), param_grid)
-    grid_search.fit(X, y)
-    grid_search.best_params_
-    return grid_search.best_params_
-
-
-def poly_param_selection(X, y):
-    """Find best parameters for polynomial kernel."""
-    Cs = [0.01, 0.1, 1, 5, 10]
-    gammas = [0.01, 0.1, 1, 5, 10]
-    degreeValues = [1, 2, 3]
-    coef0Values = [0, 1, 2]
-    param_grid = {'C': Cs, 'gamma': gammas,
-                  'degree': degreeValues, 'coef0': coef0Values}
-    grid_search = GridSearchCV(SVC(kernel='poly'), param_grid)
-    grid_search.fit(X, y)
-    grid_search.best_params_
-    return grid_search.best_params_
-
-
-# def get_pca(emotions):
-#     """."""
-#     X_train, X_test, y_train, y_test = create_data(emotions)
-#
-#     n_components = 10
-#     # nsamples, nx, ny = X_train.shape
-#     # X_train = X_train.reshape((nsamples, nx*ny))
-#     # nsamples, nx, ny = X_test.shape
-#     # X_test = X_test.reshape((nsamples, nx*ny))
-#     X_train = np.array(X_train)
-#     pca = PCA(n_components=n_components, svd_solver='randomized',
-#               whiten=True).fit(X_train)
-#
-#     # project the input data on the eigenfaces orthonormal basis
-#     X_train_pca = pca.transform(X_train)
-#     X_test_pca = pca.transform(X_test)
-#
-#     return X_train_pca, X_test_pca, y_train, y_test
-
-
-X_train1, y_train1, X_test1, y_test1 = exmodel.get_sets(EMOTIONS_5)
-X = X_train1 + X_test1
-y = y_train1 + y_test1
-print(rbf_param_selection(X, y))
-print(linear_param_selection(X, y))
-print(poly_param_selection(X, y))
 
 """ Test the classifiers! """
 
@@ -155,21 +119,6 @@ score_time_stop = 0
 fit_time = 0
 score_time = 0
 
-# Build classifiers.
-# GridSearchCV found C=0.01 to be optimal parameter.
-lin_svm_clf = Pipeline([
-    ("scaler", StandardScaler()),
-    ("linear_svc", LinearSVC(C=0.01, loss="hinge"))
-])
-# GridSearchCV found C=5, gamma=0.01 to be optimal parameters.
-rbf_svm_clf = Pipeline((
-    ("scaler", StandardScaler()),
-    ("svc_clf", SVC(kernel="rbf", C=5, gamma=0.01, probability=True))
-))
-poly_svm_clf = Pipeline((
-    ("scaler", StandardScaler()),
-    ("svc_clf", SVC(kernel="poly", C=1, probability=True))
-))
 
 for i in range(0, 5):  # 5 testing runs
     print("\nROUND {}\n".format(i+1))
@@ -182,38 +131,33 @@ for i in range(0, 5):  # 5 testing runs
     X_train1 = np.array(X_train1)
     X_test1 = np.array(X_test1)
 
-    # Binarize the output.
-    y = label_binarize(y_test, classes=[1, 2, 3, 4, 5, 6, 7, 8])
-    y1 = label_binarize(y_test1, classes=[1, 2, 3, 4, 5])
-    n_classes = y.shape[1]
-    n_classes1 = y1.shape[1]
+    # Number of classes.
+    n_classes = len(EMOTIONS_8)
+    n_classes1 = len(EMOTIONS_5)
 
     """ LINEAR KERNEL // LIST 1 // LANDMARKS """
-    # Probability of one class vs. the rest.
-    svm_clf = OneVsRestClassifier(lin_svm_clf)
-
     # Train the support vector machine.
-    print("***> Training SVM with LINEAR kernel & list 1.")
+    print("***> Training SVM with LINEAR kernel, landmarks, list 1.")
     fit_time_start = time.clock()
-    y_pred = svm_clf.fit(X_train, y_train).predict(X_test)
+    y_pred = lin_svm_clf.fit(X_train, y_train).predict(X_test)
     fit_time_stop = time.clock()
     fit_time = fit_time_stop-fit_time_start
 
     # Get the score for the classifier (percent it got correct).
     print("Scoring the classifier on the prediction list 1.")
     score_time_start = time.clock()
-    linear_score = svm_clf.score(X_test, y_test)
+    linear_score = lin_svm_clf.score(X_test, y_test)
     score_time_stop = time.clock()
     score_time = score_time_stop-score_time_start
 
     # Output classification report and confusion matrix.
-    name = "linear8({})".format(i+1)
+    name = "linear8L({})".format(i+1)
     evmodel.report(y_test, y_pred, n_classes, name)
     evmodel.matrix(y_test, y_pred, np.unique(y_train), False, name)
     evmodel.matrix(y_test, y_pred, np.unique(y_train), True, name)
 
     # Output the results.
-    with open('results/{}_round{}'.format(name, i+1), "w") as text_file:
+    with open('results/{}'.format(name), "w") as text_file:
         print(name, file=text_file)
         print("> {:.2f} percent correct.".format(linear_score*100),
               file=text_file)
@@ -226,26 +170,24 @@ for i in range(0, 5):  # 5 testing runs
     linear_score_times.append(score_time)
 
     """ LINEAR KERNEL // LIST 2 // LANDMARKS """
-    svm_clf = OneVsRestClassifier(lin_svm_clf)
-
-    print("***> Training SVM with LINEAR kernel & list 2.")
+    print("***> Training SVM with LINEAR kernel, landmarks, list 2.")
     fit_time_start = time.clock()
-    y_pred = svm_clf.fit(X_train1, y_train1).predict(X_test1)
+    y_pred = lin_svm_clf.fit(X_train1, y_train1).predict(X_test1)
     fit_time_stop = time.clock()
     fit_time = fit_time_stop-fit_time_start
 
     print("Scoring the classfier on the prediction set 2.")
     score_time_start = time.clock()
-    linear_score = svm_clf.score(X_test1, y_test1)
+    linear_score = lin_svm_clf.score(X_test1, y_test1)
     score_time_stop = time.clock()
     score_time = score_time_stop-score_time_start
 
-    name = "linear5({})".format(i+1)
+    name = "linear5L({})".format(i+1)
     evmodel.report(y_test1, y_pred, n_classes1, name)
     evmodel.matrix(y_test1, y_pred, np.unique(y_train1), False, name)
     evmodel.matrix(y_test1, y_pred, np.unique(y_train1), True, name)
 
-    with open('results/{}_round{}'.format(name, i+1), "w") as text_file:
+    with open('results/{}'.format(name), "w") as text_file:
         print(name, file=text_file)
         print("> {:.2f} percent correct.".format(linear_score*100),
               file=text_file)
@@ -257,26 +199,24 @@ for i in range(0, 5):  # 5 testing runs
     linear_score_times1.append(score_time)
 
     """ RBF KERNEL // LIST 1 // LANDMARKS """
-    rbf_clf = OneVsRestClassifier(rbf_svm_clf)
-
-    print("***> Training SVM with RBF kernel & list 1.")
+    print("***> Training SVM with RBF kernel, landmarks, list 1.")
     fit_time_start = time.clock()
-    y_pred = rbf_clf.fit(X_train, y_train).predict(X_test)
+    y_pred = rbf_svm_clf.fit(X_train, y_train).predict(X_test)
     fit_time_stop = time.clock()
     fit_time = fit_time_stop-fit_time_start
 
     print("Scoring the classfier on the prediction set 1.")
     score_time_start = time.clock()
-    rbf_score = rbf_clf.score(X_test, y_test)
+    rbf_score = rbf_svm_clf.score(X_test, y_test)
     score_time_stop = time.clock()
     score_time = score_time_stop-score_time_start
 
-    name = "rbf8({})".format(i+1)
+    name = "rbf8L({})".format(i+1)
     evmodel.report(y_test, y_pred, n_classes, name)
     evmodel.matrix(y_test, y_pred, np.unique(y_train), False, name)
     evmodel.matrix(y_test, y_pred, np.unique(y_train), True, name)
 
-    with open('results/{}_round{}'.format(name, i+1), "w") as text_file:
+    with open('results/{}'.format(name), "w") as text_file:
         print(name, file=text_file)
         print("> {:.2f} percent correct.".format(rbf_score*100),
               file=text_file)
@@ -288,26 +228,24 @@ for i in range(0, 5):  # 5 testing runs
     rbf_score_times.append(score_time)
 
     """ RBF KERNEL // LIST 2 // LANDMARKS """
-    rbf_clf = OneVsRestClassifier(rbf_svm_clf)
-
-    print("Training SVM with RBF kernel & list 2.")
+    print("Training SVM with RBF kernel, landmarks, list 2.")
     fit_time_start = time.clock()
-    y_pred = rbf_clf.fit(X_train1, y_train1).predict(X_test1)
+    y_pred = rbf_svm_clf.fit(X_train1, y_train1).predict(X_test1)
     fit_time_stop = time.clock()
     fit_time = fit_time_stop-fit_time_start
 
     print("Scoring the classfier on the prediction set 2.")
     score_time_start = time.clock()
-    rbf_score = rbf_clf.score(X_test1, y_test1)
+    rbf_score = rbf_svm_clf.score(X_test1, y_test1)
     score_time_stop = time.clock()
     score_time = score_time_stop-score_time_start
 
-    name = "rbf5({})".format(i+1)
+    name = "rbf5L({})".format(i+1)
     evmodel.report(y_test1, y_pred, n_classes1, name)
     evmodel.matrix(y_test1, y_pred, np.unique(y_train1), False, name)
     evmodel.matrix(y_test1, y_pred, np.unique(y_train1), True, name)
 
-    with open('results/{}_round{}'.format(name, i+1), "w") as text_file:
+    with open('results/{}'.format(name), "w") as text_file:
         print(name, file=text_file)
         print("> {:.2f} percent correct.".format(rbf_score*100),
               file=text_file)
@@ -319,26 +257,24 @@ for i in range(0, 5):  # 5 testing runs
     rbf_score_times1.append(score_time)
 
     """ POLY KERNEL // LIST 1 // LANDMARKS """
-    poly_clf = OneVsRestClassifier(poly_svm_clf)
-
-    print("Training SVM with POLYNOMIAL kernel & list 1.")
+    print("Training SVM with POLYNOMIAL kernel, landmarks, list 1.")
     fit_time_start = time.clock()
-    y_pred = poly_clf.fit(X_train, y_train).predict(X_test)
+    y_pred = poly_svm_clf.fit(X_train, y_train).predict(X_test)
     fit_time_stop = time.clock()
     fit_time = fit_time_stop-fit_time_start
 
     print("Scoring the classfier on the prediction set 1.")
     score_time_start = time.clock()
-    poly_score = poly_clf.score(X_test, y_test)
+    poly_score = poly_svm_clf.score(X_test, y_test)
     score_time_stop = time.clock()
     score_time = score_time_stop-score_time_start
 
-    name = "poly8({})".format(i+1)
+    name = "poly8L({})".format(i+1)
     evmodel.report(y_test, y_pred, n_classes, name)
     evmodel.matrix(y_test, y_pred, np.unique(y_train), False, name)
     evmodel.matrix(y_test, y_pred, np.unique(y_train), True, name)
 
-    with open('results/{}_round{}'.format(name, i+1), "w") as text_file:
+    with open('results/{}'.format(name, i+1), "w") as text_file:
         print(name, file=text_file)
         print("> {:.2f} percent correct.".format(poly_score*100),
               file=text_file)
@@ -349,27 +285,25 @@ for i in range(0, 5):  # 5 testing runs
     poly_fit_times.append(fit_time)
     poly_score_times.append(score_time)
 
-    """ POLY KERNEL // LIST 2 """
-    poly_clf = OneVsRestClassifier(poly_svm_clf)
-
-    print("Training SVM with POLYNOMIAL kernel & list 2.")
+    """ POLY KERNEL // LIST 2 // LANDMARKS """
+    print("Training SVM with POLYNOMIAL kernel, landmarks, list 2.")
     fit_time_start = time.clock()
-    y_pred = poly_clf.fit(X_train1, y_train1).predict(X_test1)
+    y_pred = poly_svm_clf.fit(X_train1, y_train1).predict(X_test1)
     fit_time_stop = time.clock()
     fit_time = fit_time_stop-fit_time_start
 
     print("Scoring the classfier on the prediction set 2.")
     score_time_start = time.clock()
-    poly_score = poly_clf.score(X_test1, y_test1)
+    poly_score = poly_svm_clf.score(X_test1, y_test1)
     score_time_stop = time.clock()
     score_time = score_time_stop-score_time_start
 
-    name = "poly5({})".format(i+1)
+    name = "poly5L({})".format(i+1)
     evmodel.report(y_test1, y_pred, n_classes1, name)
     evmodel.matrix(y_test1, y_pred, np.unique(y_train1), False, name)
     evmodel.matrix(y_test1, y_pred, np.unique(y_train1), True, name)
 
-    with open('results/{}_round{}'.format(name, i+1), "w") as text_file:
+    with open('results/{}'.format(name, i+1), "w") as text_file:
         print(name, file=text_file)
         print("> {:.2f} percent correct.".format(poly_score*100),
               file=text_file)
@@ -436,33 +370,35 @@ for i in range(0, 5):  # 5 testing runs
 
 """ END OF THE TEST """
 
-with open('results/output', "w") as text_file:
-    print("\nAverages for SVM with Linear kernel / set 1 - {:.2f}%, {}, {}."
+with open('results/final_output', "w") as text_file:
+    print("\nAverages for SVM with Linear kernel / Landmarks / set 1 - {:.2f}%, {}, {}."
           .format((np.mean(linear_scores)*100),
                   (np.mean(linear_fit_times)),
                   (np.mean(linear_score_times))), file=text_file)
-    print("Averages for SVM with Linear kernel / set 2 - {:.2f}%, {}, {}."
+    print("Averages for SVM with Linear kernel / Landmarks / set 2 - {:.2f}%, {}, {}."
           .format((np.mean(linear_scores1)*100),
                   (np.mean(linear_fit_times1)),
                   (np.mean(linear_score_times1))), file=text_file)
-    print("\nAverages for SVM with RBF kernel / set 1 - {:.2f}%, {}, {}."
+    print("\nAverages for SVM with RBF kernel / Landmarks / set 1 - {:.2f}%, {}, {}."
           .format((np.mean(rbf_scores)*100),
                   (np.mean(rbf_fit_times)),
                   (np.mean(rbf_score_times))), file=text_file)
-    print("Averages for SVM with RBF kernel / set 2 - {:.2f}%, {}, {}."
+    print("Averages for SVM with RBF kernel / Landmarks / set 2 - {:.2f}%, {}, {}."
           .format((np.mean(rbf_scores1)*100),
                   (np.mean(rbf_fit_times1)),
                   (np.mean(rbf_score_times1))), file=text_file)
-    print("\nAverages for SVM with POLY kernel / set 1 - {:.2f}%, {}, {}."
+    print("\nAverages for SVM with POLY kernel / Landmarks / set 1 - {:.2f}%, {}, {}."
           .format((np.mean(poly_scores)*100),
                   (np.mean(poly_fit_times)),
                   (np.mean(poly_score_times))), file=text_file)
-    print("Averages for SVM with POLY kernel / set 2 - {:.2f}%, {}, {}."
+    print("Averages for SVM with POLY kernel / Landmarks / set 2 - {:.2f}%, {}, {}."
           .format((np.mean(poly_scores1)*100),
                   (np.mean(poly_fit_times1)),
                   (np.mean(poly_score_times1))), file=text_file)
 
 # End the script.
 end = time.clock()
-print("""\n{}: Program end. Time elapsed:
-      {:.5f}.""".format(script_name, end - start))
+hours, rem = divmod(end - start, 3600)
+minutes, seconds = divmod(rem, 60)
+print("\n***> Time elapsed: {:0>2}:{:0>2}:{:05.2f}."
+      .format(int(hours), int(minutes), seconds))

@@ -13,25 +13,25 @@ I have 3 classifiers:
 """
 
 # Import packages.
-import cv2  # OpenCV
 import os
 import time
 import multiprocessing
 import numpy as np
+from cv2 import face  # OpenCV
 
 # My imports.
-import extraction_model as model
-from constants import EMOTIONS_5, EMOTIONS_8
+import extraction_model as exmodel
+from sort_database.utils import EMOTIONS_5, EMOTIONS_8
 
 
 # Start the script.
-start = time.clock()
-sname = os.path.basename(__file__)  # The name of this script
-print("\n{}: Program start. Clock: {}.".format(sname, start))
+script_name = os.path.basename(__file__)  # The name of this script
+print("\n{}: Beginning face recogniser tests...\n".format(script_name))
+start = time.clock()  # Start of the speed test. clock() is most accurate.
 
-fisherface = cv2.face.FisherFaceRecognizer_create()  # Fisherface classifier
-eigenface = cv2.face.EigenFaceRecognizer_create()  # Eigenface classifier
-lbph = cv2.face.LBPHFaceRecognizer_create()  # Local Binary Patterns classifier
+fisherface = face.FisherFaceRecognizer_create()  # Fisherface classifier
+eigenface = face.EigenFaceRecognizer_create()  # Eigenface classifier
+lbph = face.LBPHFaceRecognizer_create()  # Local Binary Patterns classifier
 
 
 def run_fisher_recognizer(X_train, y_train, X_test, y_test):
@@ -41,7 +41,7 @@ def run_fisher_recognizer(X_train, y_train, X_test, y_test):
 
     fisherface.train(X_train, np.asarray(y_train))
 
-    print("***> Predicting classification set")
+    print("Predicting classification set.")
     cnt = 0
     correct = 0
     incorrect = 0
@@ -64,7 +64,7 @@ def run_eigen_recognizer(X_train, y_train, X_test, y_test):
 
     eigenface.train(X_train, np.asarray(y_train))
 
-    print("***> Predicting classification set")
+    print("Predicting classification set.")
     cnt = 0
     correct = 0
     incorrect = 0
@@ -87,7 +87,7 @@ def run_lbph_recognizer(X_train, y_train, X_test, y_test):
 
     lbph.train(X_train, np.asarray(y_train))
 
-    print("***> Predicting classification set")
+    print("Predicting classification set.")
     cnt = 0
     correct = 0
     incorrect = 0
@@ -103,8 +103,8 @@ def run_lbph_recognizer(X_train, y_train, X_test, y_test):
     return ((correct / cnt) * 100)
 
 
-X_train, y_train, X_test, y_test = model.get_sets_as_images(EMOTIONS_8)
-X_train1, y_train1, X_test1, y_test1 = model.get_sets_as_images(EMOTIONS_5)
+X_train, y_train, X_test, y_test = exmodel.get_sets_as_images(EMOTIONS_8)
+X_train1, y_train1, X_test1, y_test1 = exmodel.get_sets_as_images(EMOTIONS_5)
 
 metascore1 = []
 metascore2 = []
@@ -116,49 +116,55 @@ metascore6 = []
 
 def threadme1():
     """Produce the results on thread 1."""
-    for i in range(0, 5):
+    for i in range(0, 10):
         f = run_fisher_recognizer(X_train, y_train, X_test, y_test)
-        print("***> Fisherfaces/8 Emotions got {} percent correct".format(f))
+        print("***> Fisherfaces on 8 Emotions have a {} percent found rate."
+              .format(f))
         metascore1.append(f)
 
 
 def threadme2():
     """Produce the results on thread 2."""
-    for i in range(0, 5):
+    for i in range(0, 10):
         f1 = run_fisher_recognizer(X_train1, y_train1, X_test1, y_test1)
-        print("***> Fisherfaces/5 Emotions got {} percent correct".format(f1))
+        print("***> Fisherfaces on 5 Emotions have a {} percent found rate."
+              .format(f1))
         metascore2.append(f1)
 
 
 def threadme3():
     """Produce the results on thread 3."""
-    for i in range(0, 5):
+    for i in range(0, 10):
         e = run_eigen_recognizer(X_train, y_train, X_test, y_test)
-        print("***> Eigenfaces/8 Emotions got {} percent correct".format(e))
+        print("***> Eigenfaces on 8 Emotions have a {} percent found rate."
+              .format(e))
         metascore3.append(e)
 
 
 def threadme4():
     """Produce the results on thread 4."""
-    for i in range(0, 5):
+    for i in range(0, 10):
         e1 = run_eigen_recognizer(X_train1, y_train1, X_test1, y_test1)
-        print("***> Eigenfaces/5 Emotions got {} percent correct".format(e1))
+        print("***> Eigenfaces on 5 Emotions have a {} percent found rate."
+              .format(e1))
         metascore4.append(e1)
 
 
 def threadme5():
     """Produce the results on thread 5."""
-    for i in range(0, 5):
+    for i in range(0, 10):
         l = run_lbph_recognizer(X_train, y_train, X_test, y_test)
-        print("***> Local Binary Pattern Histograms/8 Emotions got {} percent correct".format(l))
+        print("***> Local Binary Pattern Histograms on 8 Emotions have a {} percent found rate."
+              .format(l))
         metascore5.append(l)
 
 
 def threadme6():
     """Produce the results on thread 6."""
-    for i in range(0, 5):
+    for i in range(0, 10):
         l1 = run_lbph_recognizer(X_train1, y_train1, X_test1, y_test1)
-        print("***> Local Binary Pattern Histograms/5 Emotions got {} percent correct".format(l1))
+        print("***> Local Binary Pattern Histograms on 5 Emotions have a {} percent found rate."
+              .format(l1))
         metascore6.append(l1)
 
 
@@ -172,20 +178,23 @@ processes = [multiprocessing.Process(target=threadme1()),
 [process.start() for process in processes]
 [process.join() for process in processes]
 
-with open('results/facemethods', "w") as text_file:
-    print("\n***> Final score for Fisherfaces/8 Emotions: {} percent correct."
+with open('results/face_recogniser', "w") as text_file:
+    print("\n***> Final score for Fisherfaces on 8 Emotions, has a {} percent found rate."
           .format(np.mean(metascore1)))
-    print("***> Final score for Fisherfaces/5 Emotions: {} percent correct."
+    print("***> Final score for Fisherfaces on 5 Emotions, has a {} percent found rate."
           .format(np.mean(metascore2)))
-    print("***> Final score for Eigenfaces/8 Emotions: {} percent correct."
+    print("***> Final score for Eigenfaces on 8 Emotions, has a {} percent found rate."
           .format(np.mean(metascore3)))
-    print("***> Final score for Eigenfaces/5 Emotions: {} percent correct."
+    print("***> Final score for Eigenfaces on 5 Emotions, has a {} percent found rate."
           .format(np.mean(metascore4)))
-    print("***> Final score for Local Binary Histograms/8 Emotions: {} percent correct."
+    print("***> Final score for Local Binary Histograms on 8 Emotions, has a {} percent found rate."
           .format(np.mean(metascore5)))
-    print("***> Final score for Local Binary Histograms/5 Emotions: {} percent correct."
+    print("***> Final score for Local Binary Histograms on 5 Emotions, has a {} percent found rate."
           .format(np.mean(metascore6)))
 
 # End the script.
 end = time.clock()
-print("\n{}: Program end. Time elapsed: {}.".format(sname, end - start))
+hours, rem = divmod(end - start, 3600)
+minutes, seconds = divmod(rem, 60)
+print("\n***> Time elapsed: {:0>2}:{:0>2}:{:05.2f}."
+      .format(int(hours), int(minutes), seconds))

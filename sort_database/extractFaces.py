@@ -116,8 +116,9 @@ def detect_faces(emotion):
             # cv2.imwrite('roi.png', gray)
 
             try:
-                # gray = resize(gray)
-                cv2.imwrite("database//{}//{}.png".format(emotion, filenumber),
+                # Comment out resize if for SVMs.
+                gray = resize(gray)
+                cv2.imwrite("database2//{}//{}.png".format(emotion, filenumber),
                             gray)
                 filenumber += 1
             except:
