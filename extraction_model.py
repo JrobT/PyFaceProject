@@ -9,9 +9,12 @@ import dlib
 import math
 import random
 import glob
+import time
+from PIL import Image
+from sklearn.decomposition import PCA
 
 # My imports.
-from sort_database.utils import HAAR, HAAR2, HAAR3, HAAR4, PRED
+from sort_database.utils import *
 
 # Set Face Detectors.
 faceDet = cv2.CascadeClassifier("sort_database//" + HAAR)
@@ -38,11 +41,11 @@ def get_images(emotion):
     """Split dataset into 80 percent training set and 20 percent prediction."""
     files = glob.glob("sort_database//database//{}//*".format(emotion))
     random.shuffle(files)
-    training = files[:int(len(files) * training_set_size)]
-    prediction = files[-int(len(files) * testing_set_size):]
+    # training = files[:int(len(files) * training_set_size)]
+    # prediction = files[-int(len(files) * testing_set_size):]
     # for testing
-    # training = files[:5]
-    # prediction = files[-5:]
+    training = files[:5]
+    prediction = files[-5:]
     return training, prediction
 
 
@@ -228,6 +231,7 @@ def get_sets_as_images(emotions):
 
             clahe_image = clahe.apply(gray)
             # clahe_image = cv2.equalizeHist(gray)
+            # cv2.imwrite('clahe.png', clahe_image)
             check = get_face_dlib_rects(clahe_image)
 
             if len(check) > 0:
@@ -238,8 +242,9 @@ def get_sets_as_images(emotions):
             image = cv2.imread(item)  # Open image
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-            # clahe_image = clahe.apply(gray)
-            clahe_image = cv2.equalizeHist(gray)
+            clahe_image = clahe.apply(gray)
+            # clahe_image = cv2.equalizeHist(gray)
+            # cv2.imwrite('clahe.png', clahe_image)
             check = get_face_dlib_rects(clahe_image)
 
             if len(check) > 0:
@@ -280,8 +285,9 @@ def get_sets(emotions):
             image = cv2.imread(item)  # Open image
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-            # clahe_image = clahe.apply(gray)
-            clahe_image = cv2.equalizeHist(gray)
+            clahe_image = clahe.apply(gray)
+            # clahe_image = cv2.equalizeHist(gray)
+            # cv2.imwrite('clahe.png', clahe_image)
             facefeatures = get_face_landmarks(clahe_image)
 
             if (facefeatures != "error"):
@@ -289,3 +295,47 @@ def get_sets(emotions):
                 prediction_labels.append(emotions.index(emotion))
 
     return training_data, training_labels, prediction_data, prediction_labels
+
+
+def get_sets_pca(emotions):
+    """Make the feature vector sets to test on."""
+    X_train = X_test = y_train = y_test = []
+    n_components = len(emotions)
+    h = w = 380
+
+    for emotion in emotions:
+        print("Obtaining images that represent ``{}''.".format(emotion))
+        training, prediction = get_images(emotion)
+
+        for data in training:
+            print(Image.open(data).shape)
+            X_train.append(flatten_image(matrix_image(data)))
+            y_train.append(emotions.index(emotion))
+        for data in prediction:
+            X_test.append(flatten_image(matrix_image(data)))
+            y_test.append(emotions.index(emotion))
+
+        X_train = convert_numpy(X_train)
+        X_test = convert_numpy(X_test)
+
+        print(X_train.shape, X_train.dtype)
+
+        print("***> Allocating {}. This directory contains {} images."
+              .format(emotion, len(training)+len(prediction)))
+
+        print("Extracting the top {} eigenfaces from {} faces."
+              .format(n_components, X_train.shape[0]))
+        c0 = time.clock()
+        pca = PCA(svd_solver='randomized', n_components=n_components).fit(X_train)
+        print("Done in %0.3fs" % (time.clock() - c0))
+
+        eigenfaces = pca.components_.reshape((n_components, h, w))
+
+        print("Projecting the input data on the eigenfaces orthonormal basis.")
+
+        t0 = time.clock()
+        X_train_pca = pca.transform(X_train)
+        X_test_pca = pca.transform(X_test)
+        print("done in %0.3fs" % (time.clock() - t0))
+
+    return X_train_pca, X_test_pca, y_train, y_test

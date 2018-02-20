@@ -39,7 +39,7 @@ def run_fisher_recognizer(X_train, y_train, X_test, y_test):
     print("\n***> Training fisherface classifier")
     print("Size of the training set is {} images.".format(len(y_train)))
 
-    fisherface.train(X_train, np.asarray(y_train))
+    fisherface.train(X_train, np.array(y_train))
 
     print("Predicting classification set.")
     cnt = 0
@@ -62,7 +62,7 @@ def run_eigen_recognizer(X_train, y_train, X_test, y_test):
     print("\n***>: Training eigenface classifier")
     print("Size of the training set is {} images.".format(len(y_train)))
 
-    eigenface.train(X_train, np.asarray(y_train))
+    eigenface.train(X_train, np.array(y_train))
 
     print("Predicting classification set.")
     cnt = 0
@@ -85,7 +85,7 @@ def run_lbph_recognizer(X_train, y_train, X_test, y_test):
     print("\n***>: Training local binary pattern classifier")
     print("Size of the training set is {} images.".format(len(y_train)))
 
-    lbph.train(X_train, np.asarray(y_train))
+    lbph.train(X_train, np.array(y_train))
 
     print("Predicting classification set.")
     cnt = 0

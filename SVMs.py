@@ -34,6 +34,7 @@ each method and label its output.
 # Import packages.
 import os
 import time
+import csv
 import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -54,8 +55,9 @@ start = time.clock()  # Start of the speed test. clock() is most accurate.
 
 
 # Build classifiers.
-f = open('results/svm_params', 'r')
-params = f.read()
+params = {}
+for key, val in csv.reader(open('results/lin_params.csv')):
+    params[key] = val
 for k, v in params.items():
     for val in v:
         svc = LinearSVC(C=0.01, loss="hinge")
@@ -64,8 +66,11 @@ for k, v in params.items():
             ("scaler", StandardScaler()),
             ("linear_svc", svc)
         ))
-        print(lin_svm_clf)
-params = f.read()
+print("Linear Classifier: ", lin_svm_clf)
+
+params = {}
+for key, val in csv.reader(open('results/rbf_params.csv')):
+    params[key] = val
 for k, v in params.items():
     for val in v:
         svc = SVC(kernel="rbf", C=5, gamma=0.01, probability=True)
@@ -74,8 +79,11 @@ for k, v in params.items():
             ("scaler", StandardScaler()),
             ("svc_clf", svc)
         ))
-        print(rbf_svm_clf)
-params = f.read()
+print("Radial Basis Function Classifier: ", rbf_svm_clf)
+
+params = {}
+for key, val in csv.reader(open('results/poly_params.csv')):
+    params[key] = val
 for k, v in params.items():
     for val in v:
         svc = SVC(kernel="poly", C=1, probability=True)
@@ -84,7 +92,7 @@ for k, v in params.items():
             ("scaler", StandardScaler()),
             ("svc_clf", svc)
         ))
-        print(poly_svm_clf)
+print("Polynomial Classifier: ", poly_svm_clf)
 
 
 """ Test the classifiers! """
@@ -124,6 +132,8 @@ for i in range(0, 5):  # 5 testing runs
     print("\nROUND {}\n".format(i+1))
     X_train, y_train, X_test, y_test = exmodel.get_sets(EMOTIONS_8)
     X_train1, y_train1, X_test1, y_test1 = exmodel.get_sets(EMOTIONS_5)
+    X_train_pca, y_train_pca, X_test_pca, y_test_pca = exmodel.get_sets_pca(EMOTIONS_8)
+    X_train_pca1, y_train_pca1, X_test_pca1, y_test_pca1 = exmodel.get_sets_pca(EMOTIONS_5)
 
     # Change to numpy arrays as classifier expects them in this format.
     X_train = np.array(X_train)
@@ -169,6 +179,40 @@ for i in range(0, 5):  # 5 testing runs
     linear_fit_times.append(fit_time)
     linear_score_times.append(score_time)
 
+    """ LINEAR KERNEL // LIST 1 // PCA """
+    # Train the support vector machine.
+    print("***> Training SVM with LINEAR kernel, PCA, list 1.")
+    fit_time_start = time.clock()
+    y_pred = lin_svm_clf.fit(X_train_pca, y_train_pca).predict(X_test_pca)
+    fit_time_stop = time.clock()
+    fit_time = fit_time_stop-fit_time_start
+
+    # Get the score for the classifier (percent it got correct).
+    print("Scoring the classifier on the prediction list 1.")
+    score_time_start = time.clock()
+    linear_score = lin_svm_clf.score(X_test_pca, y_test_pca)
+    score_time_stop = time.clock()
+    score_time = score_time_stop-score_time_start
+
+    # Output classification report and confusion matrix.
+    name = "linear8P({})".format(i+1)
+    evmodel.report(y_test_pca, y_pred, n_classes, name)
+    evmodel.matrix(y_test_pca, y_pred, np.unique(y_train_pca), False, name)
+    evmodel.matrix(y_test_pca, y_pred, np.unique(y_train_pca), True, name)
+
+    # Output the results.
+    with open('results/{}'.format(name), "w") as text_file:
+        print(name, file=text_file)
+        print("> {:.2f} percent correct.".format(linear_score*100),
+              file=text_file)
+        print("> Fit time {}".format(fit_time), file=text_file)
+        print("> Test time {}".format(score_time), file=text_file)
+
+    # Append this rounds scores and times to the respective metascore array.
+    linear_scores.append(linear_score)
+    linear_fit_times.append(fit_time)
+    linear_score_times.append(score_time)
+
     """ LINEAR KERNEL // LIST 2 // LANDMARKS """
     print("***> Training SVM with LINEAR kernel, landmarks, list 2.")
     fit_time_start = time.clock()
@@ -197,6 +241,40 @@ for i in range(0, 5):  # 5 testing runs
     linear_scores1.append(linear_score)
     linear_fit_times1.append(fit_time)
     linear_score_times1.append(score_time)
+
+    """ LINEAR KERNEL // LIST 2 // PCA """
+    # Train the support vector machine.
+    print("***> Training SVM with LINEAR kernel, PCA, list 2.")
+    fit_time_start = time.clock()
+    y_pred = lin_svm_clf.fit(X_train_pca1, y_train_pca1).predict(X_test_pca1)
+    fit_time_stop = time.clock()
+    fit_time = fit_time_stop-fit_time_start
+
+    # Get the score for the classifier (percent it got correct).
+    print("Scoring the classifier on the prediction list 1.")
+    score_time_start = time.clock()
+    linear_score = lin_svm_clf.score(X_test_pca1, y_test_pca1)
+    score_time_stop = time.clock()
+    score_time = score_time_stop-score_time_start
+
+    # Output classification report and confusion matrix.
+    name = "linear5P({})".format(i+1)
+    evmodel.report(y_test_pca1, y_pred, n_classes, name)
+    evmodel.matrix(y_test_pca1, y_pred, np.unique(y_train_pca1), False, name)
+    evmodel.matrix(y_test_pca1, y_pred, np.unique(y_train_pca1), True, name)
+
+    # Output the results.
+    with open('results/{}'.format(name), "w") as text_file:
+        print(name, file=text_file)
+        print("> {:.2f} percent correct.".format(linear_score*100),
+              file=text_file)
+        print("> Fit time {}".format(fit_time), file=text_file)
+        print("> Test time {}".format(score_time), file=text_file)
+
+    # Append this rounds scores and times to the respective metascore array.
+    linear_scores.append(linear_score)
+    linear_fit_times.append(fit_time)
+    linear_score_times.append(score_time)
 
     """ RBF KERNEL // LIST 1 // LANDMARKS """
     print("***> Training SVM with RBF kernel, landmarks, list 1.")
